@@ -1,1 +1,1 @@
-# template-image-cloud-run
+# clean-text
