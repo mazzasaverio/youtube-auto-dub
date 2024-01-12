@@ -55,7 +55,7 @@ def pubsub_handler():
         db.add(new_item)
         db.commit()
         db.refresh(new_item)
-        logger.info("Item successfully added.")
+        logger.info("Item succesfsfully added.")
 
     except Exception as e:
         logger.error(f"Error during item addition: {e}")
