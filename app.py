@@ -4,6 +4,10 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os
 import logging
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 # Logging configuration
 logging.basicConfig(level=logging.INFO)
