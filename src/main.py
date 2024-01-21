@@ -27,7 +27,7 @@ async def pubsub_handler():
     with Session(engine) as session:
         items = session.query(Item).all()
         for item in items:
-            logger.info(f"Retrieved item from db: {item.name}")
+            logger.info(f"Retrieved item from database: {item.name}")
 
     # # Translation Operation
     # text = """Wie oben bereits erwähnt, ist die Transparenz ein entscheidender Treiber für diese Entwicklungen. Im Bereich
