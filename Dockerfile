@@ -1,18 +1,18 @@
-# Usa un'immagine di base ufficiale Python.
+# Use an official Python runtime as a parent image
 FROM python:3.9-slim
 
-# Imposta la directory di lavoro all'interno del container.
+# Set the working directory in the container
 WORKDIR /app
 
-# Copia i file necessari per l'applicazione nel container.
-COPY requirements.txt ./
-COPY src ./
+# Copy only the src directory and the requirements file
+COPY src/ ./src/
+COPY requirements.txt .
 
-# Installa le dipendenze.
+# Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Espone la porta su cui l'applicazione sarà accessibile.
+# Make port 8080 available to the world outside this container
 EXPOSE 8080
 
-# Comando per eseguire l'applicazione.
+# Run app.py when the container launches
 CMD ["uvicorn", "src.app:app", "--host", "0.0.0.0", "--port", "8080"]
