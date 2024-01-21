@@ -6,8 +6,8 @@ passlib==1.7.4
 pip-chill==1.0.3
 psycopg2-binary==2.9.9
 pydantic-settings==2.1.0
-sentencepiece==0.1.99
+# sentencepiece==0.1.99
 sqlmodel==0.0.14
-torch==2.1.2
-transformers==4.36.2
+# torch==2.1.2
+# transformers==4.36.2
 uvicorn==0.25.0
