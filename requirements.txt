@@ -1,6 +1,6 @@
 email-validator==2.1.0.post1
 fastapi==0.108.0
-google-cloud-storage==2.14.0
+# google-cloud-storage==2.14.0
 loguru==0.7.2
 passlib==1.7.4
 pip-chill==1.0.3
