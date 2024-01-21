@@ -9,7 +9,7 @@ When storage dispatches a notification, it is captured through pub/sub and trigg
 1. Read and write operations on a Cloud SQL PostgreSQL database.
 2. Storing a pre-trained model from Hugging Face in the storage used as cache, which is then read and utilized each time the Cloud Run is triggered.
 
-FastAPI is used to handle pub/sub requests. For setting up infrastructure components like Cloud SQL, Cloud Build, and Cloud Run, etc., please refer to another repository where you'll find the specific Terraform code for this use case
+FastAPI is used to handle pub/sub requests. For setting up infrastructure components like Cloud SQL, Cloud Build, and Cloud Run, etc., please refer to another repository where you'll find the specific Terraform code for this use case.
 
 ## Key Functions
 
