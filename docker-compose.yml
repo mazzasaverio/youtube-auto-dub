@@ -1,0 +1,14 @@
+version: "3.8"
+
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - DB_HOST=${DB_HOST}
+      - DB_NAME=${DB_NAME}
+      - STORAGE_OPTION=${STORAGE_OPTION}
+      - GCS_BUCKET_NAME=${GCS_BUCKET_NAME}

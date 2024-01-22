@@ -11,7 +11,7 @@ COPY requirements.txt .
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Make port 8080 available to the world outside this container
+# Make port 8080 available to the world outside this containe
 EXPOSE 8080
 
 # Run app.py when the container launches
