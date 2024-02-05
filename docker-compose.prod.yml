@@ -1,0 +1,10 @@
+version: "3"
+
+services:
+  web:
+    build: .
+    command: sh -c "uvicorn main:app --port=8000 --host=0.0.0.0"
+    env_file:
+      - .env.prod
+    ports:
+      - "8000:8000"

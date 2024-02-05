@@ -1,3 +1,5 @@
+
+archive
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -8,6 +10,10 @@ code_report.py
 models
 # C extensions
 *.so
+
+*.env
+*.env*
+env.*
 
 # Distribution / packaging
 .Python

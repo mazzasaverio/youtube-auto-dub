@@ -31,3 +31,9 @@ To test the `/pubsub-handler` endpoint locally:
    ```bash
    curl -X POST http://127.0.0.1:8000/pubsub-handler
    ```
+
+Dev
+
+docker compose -f docker-compose.dev.yml up --build
+
+docker compose -f docker-compose.stage.yml up --build
