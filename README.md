@@ -36,4 +36,28 @@ Dev
 
 docker compose -f docker-compose.dev.yml up --build
 
-docker compose -f docker-compose.stage.yml up --build
+## Prerequisites
+
+### 1. Google Cloud Platform Account
+
+- **Sign Up**: Ensure you have an active GCP account. [Sign up here](https://cloud.google.com/) if needed.
+
+### 2. Project Setup
+
+- **New Project**: Create a new GCP project. Note down the project ID for future use.
+
+### 3. Service Account
+
+- **Create Service Account**: Create a service account with 'Owner' permissions in your GCP project.
+- **Generate Key File**: Generate a JSON key file for this service account and store it securely.
+
+### 5. Connecting Cloud Build to Your GitHub Account
+
+- Create a personal access token. Make sure to set your token (classic) to have no expiration date and select the following permissions when prompted in GitHub: repo and read:user. If your app is installed in an organization, make sure to also select the read:org permission.
+
+https://cloud.google.com/build/docs/automating-builds/github/connect-repo-github?generation=2nd-gen#terraform_1
+
+## Terraform Configuration
+
+- **Rename File**: Change `terraform.tfvars.example` to `terraform.tfvars`.
+- **Insert Credentials**: Add your credentials to the `terraform.tfvars` file.
