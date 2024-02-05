@@ -35,3 +35,11 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Set Docker image to private
+        run: |
+          curl -X PATCH \
+            -H "Authorization: JWT ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"is_private": true}' \
+            "https://hub.docker.com/v2/repositories/inter92/fastapi-cloudrun/"
