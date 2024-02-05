@@ -2,7 +2,7 @@
 /* ----------------------------- GITHUB ACCOUNT ----------------------------- */
 
 resource "google_secret_manager_secret" "github_token_secret" {
-  secret_id = "github-token-secret"
+  secret_id = "github-token-secret-2"
   replication {
     auto {}
   }

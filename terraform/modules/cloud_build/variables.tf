@@ -12,8 +12,6 @@ variable "gcp_project_number" {
 }
 
 
-
-
 variable "repo_name" {
   description = "The name of the repository to create the trigger for the Cloud Build."
   type        = string
@@ -38,7 +36,3 @@ variable "github_remote_uri" {
   description = "The GitHub remote URI."
   type        = string
 }
-# variable "github_token_secret_version_id" {
-#   description = "ID of the secret version containing the GitHub token"
-#   type        = string
-# }
