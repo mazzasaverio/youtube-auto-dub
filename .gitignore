@@ -3,6 +3,7 @@ code_report.py
 custom_tree_and_files_corrected.txt
 
 # .tfstate files
+terraform.tfstate
 terraform.tfvars
 terraform/terraform.tfvars
 .terraform.lock.hcl
