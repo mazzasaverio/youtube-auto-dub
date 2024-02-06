@@ -15,7 +15,7 @@ steps:
       - "--image=gcr.io/$PROJECT_ID/youtube-auto-dub:latest"
       - "--region=us-central1" # Confirm this is your desired region
       - "--platform=managed"
-      - "--allow-unauthenticated" # Consider removing if you need authentication
+      - "--allow-unauthenticated" # Consider removing if you need authenticatio
 
 images:
   - "gcr.io/$PROJECT_ID/youtube-auto-dub:latest"
