@@ -1,10 +1,10 @@
 steps:
   - name: "gcr.io/cloud-builders/docker"
     args:
-      ["build", "-t", "gcr.io/$PROJECT_ID/fastapi-cloudrun:latest", "./backend"]
+      ["build", "-t", "gcr.io/$PROJECT_ID/youtube-auto-dub:latest", "./backend"]
 
   - name: "gcr.io/cloud-builders/docker"
-    args: ["push", "gcr.io/$PROJECT_ID/fastapi-cloudrun:latest"]
+    args: ["push", "gcr.io/$PROJECT_ID/youtube-auto-dub:latest"]
 
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     entrypoint: gcloud
@@ -12,10 +12,10 @@ steps:
       - "run"
       - "deploy"
       - "cloudrun-service" # Make sure this is your service name
-      - "--image=gcr.io/$PROJECT_ID/fastapi-cloudrun:latest"
+      - "--image=gcr.io/$PROJECT_ID/youtube-auto-dub:latest"
       - "--region=us-central1" # Confirm this is your desired region
       - "--platform=managed"
       - "--allow-unauthenticated" # Consider removing if you need authentication
 
 images:
-  - "gcr.io/$PROJECT_ID/fastapi-cloudrun:latest"
+  - "gcr.io/$PROJECT_ID/youtube-auto-dub:latest"

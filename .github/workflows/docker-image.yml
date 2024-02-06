@@ -25,7 +25,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: inter92/fastapi-cloudrun
+          images: inter92/youtube-auto-dub
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v3
