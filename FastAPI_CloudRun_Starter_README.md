@@ -1,3 +1,4 @@
+
 # FastAPI CloudRun Starter
 
 This repository serves as a starter template for setting up a FastAPI backend using Google CloudRun. It's designed to streamline the process of deploying a FastAPI application using modern infrastructure as code principles.

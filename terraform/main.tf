@@ -56,6 +56,7 @@ resource "google_project_iam_member" "cloud_build_service_account_iam_roles" {
 }
 
 
+
 /* -------------------------------------------------------------------------- */
 /*                                   Modules                                  */
 /* -------------------------------------------------------------------------- */
@@ -94,3 +95,4 @@ module "cloud_build" {
     module.secret_manager
   ]
 }
+
