@@ -15,7 +15,7 @@ FastAPI is used to handle pub/sub requests. For setting up infrastructure compon
 
 The main functionalities – database connectivity with read/write operations and text translation using a pre-trained model fetched from Hugging Face – are all triggered in the cloud when a message from pub/sub arrives. However, for local testing and independent execution, these functions can be run directly from the terminal.
 
-## Local Testing of /pubsub-handler
+## Local Testing
 
 To test the `/pubsub-handler` endpoint locally:
 

@@ -56,14 +56,27 @@ resource "google_project_iam_member" "cloud_build_service_account_iam_roles" {
 }
 
 
-
-
+/* -------------------------------------------------------------------------- */
+/*                                   Modules                                  */
+/* -------------------------------------------------------------------------- */
 
 module "secret_manager" {
   source       = "./modules/secret_manager"
   github_token = var.github_token
 }
 
+
+
+module "cloud_run" {
+  source = "./modules/cloud_run"
+
+  gcp_project_id = var.gcp_project_id
+  gcp_region     = var.gcp_region
+  network_id     = var.gcp_network_name
+  depends_on = [
+    module.secret_manager
+  ]
+}
 
 
 module "cloud_build" {
@@ -77,7 +90,7 @@ module "cloud_build" {
   github_remote_uri          = var.github_remote_uri
 
   depends_on = [
-
+    module.cloud_run,
     module.secret_manager
   ]
 }
