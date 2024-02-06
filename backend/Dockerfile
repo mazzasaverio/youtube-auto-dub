@@ -10,6 +10,6 @@ COPY . /app
 # Install Python and FastAPI dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-EXPOSE 8080
+EXPOSE 8000
 
-CMD uvicorn main:app --port=${PORT:-8080} --host=0.0.0.0
+CMD uvicorn main:app --port=${PORT:-8000} --host=0.0.0.0
