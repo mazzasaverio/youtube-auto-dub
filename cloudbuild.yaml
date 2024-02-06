@@ -10,7 +10,7 @@ steps:
     args:
       - "run"
       - "deploy"
-      - "default" # Replace with the name of your cloud run service
+      - "cloudrun-service" # Replace with the name of your cloud run service
       - "--image=gcr.io/$PROJECT_ID/fastapi-cloudrun:latest"
       - "--region=us-central1" #Replace with your region, for example us-center1
       - "--platform=managed"
