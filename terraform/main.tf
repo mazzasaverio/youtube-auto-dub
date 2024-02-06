@@ -68,16 +68,7 @@ module "secret_manager" {
 
 
 
-module "cloud_run" {
-  source = "./modules/cloud_run"
 
-  gcp_project_id = var.gcp_project_id
-  gcp_region     = var.gcp_region
-  network_id     = var.gcp_network_name
-  depends_on = [
-    module.secret_manager
-  ]
-}
 
 
 module "cloud_build" {
@@ -91,8 +82,21 @@ module "cloud_build" {
   github_remote_uri          = var.github_remote_uri
 
   depends_on = [
-    module.cloud_run,
+
     module.secret_manager
   ]
 }
 
+
+module "cloud_run" {
+  source = "./modules/cloud_run"
+
+  gcp_project_id = var.gcp_project_id
+  gcp_region     = var.gcp_region
+  network_id     = var.gcp_network_name
+  depends_on = [
+    module.secret_manager,
+    module.cloud_build
+
+  ]
+}
