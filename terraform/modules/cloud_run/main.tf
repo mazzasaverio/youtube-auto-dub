@@ -5,7 +5,7 @@ resource "google_cloud_run_v2_service" "default" {
 
   template {
     containers {
-      image = "gcr.io/${var.gcp_project_id}/fastapi-cloudrun"
+      image = "gcr.io/${var.gcp_project_id}/fastapi-cloudrun:latest"
       resources {
         limits = {
           cpu    = "2"
