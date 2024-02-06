@@ -1,15 +1,19 @@
-# Use an official Python runtime with NVIDIA CUDA support
+# Use an official Python runtime as a parent image
 FROM python:3.9-slim
 
+# Set the working directory in the container
+WORKDIR /code
 
-WORKDIR /app
+# Copy the current directory contents into the container at /code
+COPY ./app /code/app
+COPY requirements.txt /code/
 
-# Copy your application files
-COPY . /app
-
-# Install Python and FastAPI dependencies
+# Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
+ENV PYTHONPATH=/code
 EXPOSE 8000
 
-CMD uvicorn main:app --port=${PORT:-8000} --host=0.0.0.0
+# Run the application
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
