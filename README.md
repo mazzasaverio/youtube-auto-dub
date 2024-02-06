@@ -29,7 +29,7 @@ The `Dockerfile` is configured to use the NVIDIA CUDA base image with FastAPI de
 
 ### FastAPI Application
 
-The `main.py` script is the entry point for the FastAPI application. It includes basic routes and can be extended for additional functionality.
+The `main.py` script is the entry point for the FastAPI application. It includes basic routes and can be extended for additional functionality
 
 ## Usage
 
