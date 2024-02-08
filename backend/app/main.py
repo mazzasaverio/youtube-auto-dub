@@ -1,11 +1,10 @@
 from fastapi import FastAPI, HTTPException, status, Request
 from fastapi.responses import RedirectResponse, JSONResponse
-from app.api.v1.endponts import test_endpoint
+from app.api.v1.endpoints import router as v1_router
 
+app = FastAPI(title="Youtube-Auto-Dub")
 
-app = FastAPI(title="Title")
-
-app.include_router(test_endpoint.router, prefix="/api/v1")
+app.include_router(v1_router, prefix="/api/v1")
 
 
 @app.get("/")
