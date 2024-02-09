@@ -20,18 +20,21 @@ WORKDIR /code
 # Copy the project files to the container
 COPY . /code/
 
-# Install aria2 and unzip
-RUN apt-get update && apt-get install -y aria2 unzip
+# Install necessary system packages
+RUN apt-get update && apt-get install -y aria2 unzip && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 
 # Download and unzip the checkpoints
 RUN aria2c --console-log-level=error -c -x 16 -s 16 -k 1M https://myshell-public-repo-hosting.s3.amazonaws.com/checkpoints_1226.zip -d /code -o checkpoints_1226.zip && \
     unzip /code/checkpoints_1226.zip -d /code/checkpoints && \
     rm /code/checkpoints_1226.zip
 
-# If requirements.txt has other necessary packages, uncomment the next line
-RUN pip install -r requirements.txt
-# Install additional Python dependencies
-RUN pip install --upgrade pip && \
+COPY requirements.txt /code/
+
+# Install Python dependencies
+RUN pip install -r requirements.txt && \
     pip install pytube moviepy fastapi uvicorn loguru youtube-dl youtube-transcript-api librosa googletrans==4.0.0-rc1
 
 

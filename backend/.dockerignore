@@ -1,0 +1,20 @@
+# Ignore data and checkpoints directories
+backend/data/
+backend/checkpoints/
+data
+checkpoints
+
+# Ignore Git and version control
+.git
+.gitignore
+
+# Ignore other unnecessary files
+*.pyc
+*.pyo
+*.pyd
+__pycache__
+*.swp
+.DS_Store
+
+# Ignore specific files or other directories as needed
+# e.g., local environment files, IDE-specific files,
