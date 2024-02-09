@@ -11,7 +11,6 @@ ckpt_path = os.path.join(ROOT_DIR, "checkpoints")
 # Definizione delle directory relative
 directories = ["processed_audios", "downloaded_videos", "captions", "final_videos"]
 
-# Directory base
 base_dir = os.path.join(ROOT_DIR, "data")
 
 # Creazione delle directory se non esistono
@@ -20,7 +19,7 @@ for dir_name in directories:
     os.makedirs(dir_path, exist_ok=True)
 
 
-    
+
 def process_audio(
     audio_input_path: str,
     audio_output_path: str,
