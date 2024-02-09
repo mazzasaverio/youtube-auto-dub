@@ -8,13 +8,19 @@ from app.services.openvoice.api import BaseSpeakerTTS, ToneColorConverter
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ckpt_path = os.path.join(ROOT_DIR, "checkpoints")
 
-processed_audios_dir = os.path.join(ROOT_DIR,  "data", "processed_audios")
+# Definizione delle directory relative
+directories = ["processed_audios", "downloaded_videos", "captions", "final_videos"]
 
-# Creazione della cartella se non esiste
-if not os.path.exists(processed_audios_dir):
-    os.makedirs(processed_audios_dir)
+# Directory base
+base_dir = os.path.join(ROOT_DIR, "data")
+
+# Creazione delle directory se non esistono
+for dir_name in directories:
+    dir_path = os.path.join(base_dir, dir_name)
+    os.makedirs(dir_path, exist_ok=True)
 
 
+    
 def process_audio(
     audio_input_path: str,
     audio_output_path: str,
