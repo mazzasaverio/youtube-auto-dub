@@ -1,39 +1,45 @@
-# Usa l'immagine di base di Ubuntu
-FROM ubuntu:latest
+# Start with a base image that has miniconda installed
+FROM continuumio/miniconda3 as builder
 
-# Aggiorna il sistema e installa le dipendenze necessarie
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
-    sudo \
-    python3.9 \
-    python3-distutils \
-    python3-pip \
-    ffmpeg \
-    git
+# Update Conda and install mamba in the base environment
+RUN conda update -n base -c defaults conda && \
+    conda install mamba -n base -c conda-forge
 
-# Aggiorna pip
-RUN pip install --upgrade pip
+# Create a new environment for the application
+RUN mamba create -n youtube-auto-dub python=3.9 -y
 
-# Set the working directory in the container
+# Activate the created environment
+SHELL ["conda", "run", "-n", "youtube-auto-dub", "/bin/bash", "-c"]
+
+# Install PyTorch and other dependencies
+RUN mamba install pytorch==1.13.1 torchvision==0.14.1 torchaudio==0.13.1 pytorch-cuda=11.7 -c pytorch -c nvidia -y
+
+# Set the working directory
 WORKDIR /code
 
-# Copy all content into the working directory
+# Copy the project files to the container
 COPY . /code/
 
+# Install aria2 and unzip
+RUN apt-get update && apt-get install -y aria2 unzip
 
-RUN pip install gradio==3.50.2 langid faster-whisper whisper-timestamped unidecode eng-to-ipa pypinyin cn2an
+# Download and unzip the checkpoints
+RUN aria2c --console-log-level=error -c -x 16 -s 16 -k 1M https://myshell-public-repo-hosting.s3.amazonaws.com/checkpoints_1226.zip -d /code -o checkpoints_1226.zip && \
+    unzip /code/checkpoints_1226.zip -d /code/checkpoints && \
+    rm /code/checkpoints_1226.zip
+
+# If requirements.txt has other necessary packages, uncomment the next line
 RUN pip install -r requirements.txt
-RUN pip install soundfile librosa inflect jieba silero
-RUN pip install fastapi uvicorn
+# Install additional Python dependencies
+RUN pip install --upgrade pip && \
+    pip install pytube moviepy fastapi uvicorn loguru youtube-dl youtube-transcript-api librosa googletrans==4.0.0-rc1
 
-RUN apt -y install -qq aria2 unzip
-RUN aria2c --console-log-level=error -c -x 16 -s 16 -k 1M https://huggingface.co/camenduru/OpenVoice/resolve/main/checkpoints_1226.zip -d /code -o checkpoints_1226.zip
-RUN unzip /code/checkpoints_1226.zip
 
-# Expose port 8000
+# Expose the port the app runs on
 EXPOSE 8000
 
-# Set the environment variable DATA_DIR
+# Set the environment variable
 ENV DATA_DIR=/code/data
 
-# Default command to start the application
-CMD ["uvicorn", "app.main:app", "--port", "8000", "--host", "0.0.0.0"]
+
+CMD ["conda", "run", "-n", "youtube-auto-dub", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -8,6 +8,12 @@ from app.services.openvoice.api import BaseSpeakerTTS, ToneColorConverter
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ckpt_path = os.path.join(ROOT_DIR, "checkpoints")
 
+processed_audios_dir = os.path.join(ROOT_DIR,  "data", "processed_audios")
+
+# Creazione della cartella se non esiste
+if not os.path.exists(processed_audios_dir):
+    os.makedirs(processed_audios_dir)
+
 
 def process_audio(
     audio_input_path: str,
