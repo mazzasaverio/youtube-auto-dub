@@ -1,7 +1,18 @@
 
 code_report.py
 custom_tree_and_files_corrected.txt
+fetch_repo_stats.py
 
+processed
+*.pth
+*.zip
+*.wav
+checkpoints
+*.str
+*.mp3
+*.mp4
+se.path
+wavs
 # .tfstate files
 terraform.tfstate
 terraform.tfvars
