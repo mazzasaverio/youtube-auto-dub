@@ -1,6 +1,8 @@
 # Ignore data and checkpoints directories
 backend/data/
 backend/checkpoints/
+data
+checkpoints
 
 # Ignore Git and version control
 .git

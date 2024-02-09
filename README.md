@@ -1,6 +1,8 @@
-# [titolo]
+# YouTube Auto-Dub
 
-This repository aims to establish a foundation for deploying a backend using Docker, which utilizes OpenVoice and FastAPI. The main functionality is to recognize the voice timbre from a YouTube video and recreate the same video with a text-to-speech model in the same timbre after translating the subtitles. This is just a basic setup.
+This repository aims to establish a starting point for deploying degli endpoints which utilizes OpenVoice and FastAPI. The main functionality is to recognize the voice timbre from a YouTube video and recreate the same video with a text-to-speech model in the same timbre after translating the subtitles. This is just a basic setup.
+
+YouTube Auto-Dub is an innovative backend application designed for automated voice dubbing of YouTube videos. Utilizing Docker for deployment, OpenVoice for voice timbre recognition, and FastAPI for web services, this project enables the creation of dubbed YouTube videos with text-to-speech models matching the original voice timbre.
 
 ## Steps:
 
@@ -59,22 +61,12 @@ sudo aria2c --console-log-level=error -c -x 16 -s 16 -k 1M https://myshell-publi
 
 sudo unzip /code/checkpoints_1226.zip
 
+<!-- START_SECTION:reference-inspiration -->
+
 ## Reference and Inspiration
 
 |                      Repository                      | Stars | Forks | Last Updated |               About               |
 | :--------------------------------------------------: | :---: | :---: | :----------: | :-------------------------------: |
-| [OpenVoice](https://github.com/myshell-ai/OpenVoice) | 13972 | 1213  |  2024-02-09  | Instant voice cloning by MyShell. |
+| [OpenVoice](https://github.com/myshell-ai/OpenVoice) | 13973 | 1213  |  2024-02-09  | Instant voice cloning by MyShell. |
 
-<!-- START_SECTION:under-review -->
-## Repositories Under Review
-
-| Repository | Stars | Forks | Last Updated | About |
-|:-:|:-:|:-:|:-:|:-:|
-<!-- END_SECTION:under-review -->
-<!-- START_SECTION:reference-inspiration -->
-## Reference and Inspiration
-
-| Repository | Stars | Forks | Last Updated | About |
-|:-:|:-:|:-:|:-:|:-:|
-| [OpenVoice](https://github.com/myshell-ai/OpenVoice) | 13973 | 1213 | 2024-02-09 | Instant voice cloning by MyShell. |
 <!-- END_SECTION:reference-inspiration -->
