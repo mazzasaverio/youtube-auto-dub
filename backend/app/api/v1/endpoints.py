@@ -29,7 +29,7 @@ def extract_video_id(url: str) -> str:
     return match.group(1) if match else None
 
 
-@router.post("/download/")
+@router.post("/url-process/")
 async def download_video(request: VideoDownloadRequest, background_tasks: BackgroundTasks):
     # Correctly access youtube_url from the request object
     video_id = extract_video_id(request.url)
@@ -83,7 +83,7 @@ def get_task_status(video_id: str):
     status = task_status.get(video_id, "Not Found")
     return {"video_id": video_id, "status": status}
 
-@router.get("/download-video/{video_id}")
+@router.get("/download-final-video/{video_id}")
 async def download_video(video_id: str):
     video_path = os.path.join(DATA_DIR, "final_videos", f"{video_id}.mp4")
     if not os.path.exists(video_path):
