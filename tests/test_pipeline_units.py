@@ -77,6 +77,31 @@ def test_align_builds_full_length_timeline(tmp_path):
     assert len(dubbed) >= 10_000
 
 
+def test_build_sentence_segments_splits_on_punctuation():
+    from ytdub.stages.transcribe import build_sentence_segments
+
+    # (start, end, word) — two sentences separated by a period.
+    words = [
+        (0.0, 0.4, "Ciao"), (0.4, 0.8, " a"), (0.8, 1.2, " tutti."),
+        (1.5, 1.9, "Oggi"), (1.9, 2.3, " parliamo"), (2.3, 2.9, " di"), (2.9, 3.4, " doppiaggio?"),
+    ]
+    segs = build_sentence_segments(words)
+    assert [s.text for s in segs] == ["Ciao a tutti.", "Oggi parliamo di doppiaggio?"]
+    assert segs[0].start == 0.0 and segs[0].end == 1.2
+    assert segs[1].start == 1.5 and segs[1].end == 3.4
+    assert [s.index for s in segs] == [0, 1]
+
+
+def test_build_sentence_segments_caps_length():
+    from ytdub.stages.transcribe import build_sentence_segments
+
+    # No punctuation, but exceeds max_duration -> must still split.
+    words = [(float(i), float(i) + 1.0, f" w{i}") for i in range(20)]
+    segs = build_sentence_segments(words, max_duration=5.0)
+    assert len(segs) >= 2
+    assert all(s.duration <= 6.0 for s in segs)
+
+
 def test_assign_speakers_by_overlap():
     from ytdub.stages.diarize import SpeakerTurn, assign_speakers
 

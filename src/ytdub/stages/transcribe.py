@@ -10,12 +10,57 @@ faster-whisper runs on CTranslate2 (int8 on CPU), so it is fast and free on a la
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from ytdub.logging import stage_logger
 from ytdub.models import Segment
 
 log = stage_logger("transcribe")
+
+# A word that ends a sentence (keeps abbreviations like "U.S." from splitting early
+# is out of scope — good enough for dubbing).
+_SENTENCE_END = re.compile(r"[.!?…。！？]+[\"'”’)]?\s*$")
+
+
+def build_sentence_segments(
+    words: list[tuple[float, float, str]],
+    *,
+    max_chars: int = 200,
+    max_duration: float = 12.0,
+) -> list[Segment]:
+    """Group word timestamps into sentence-bounded segments.
+
+    Whisper's own segment boundaries can split mid-sentence, which hurts both
+    translation (the MT model sees fragments) and sync (odd chunk lengths). Rebuilding
+    on sentence punctuation — while capping length so a single chunk stays within what
+    the TTS handles well — gives cleaner text and more natural timing.
+
+    ``words`` is ``(start, end, text)`` tuples in order. Pure function (unit-tested).
+    """
+    segments: list[Segment] = []
+    cur: list[tuple[float, float, str]] = []
+
+    def flush() -> None:
+        if not cur:
+            return
+        text = "".join(w[2] for w in cur).strip()
+        if text:
+            segments.append(
+                Segment(index=len(segments), start=cur[0][0], end=cur[-1][1], text=text)
+            )
+        cur.clear()
+
+    for w in words:
+        cur.append(w)
+        text_so_far = "".join(x[2] for x in cur).strip()
+        duration = cur[-1][1] - cur[0][0]
+        ends_sentence = bool(_SENTENCE_END.search(w[2]))
+        too_long = len(text_so_far) >= max_chars or duration >= max_duration
+        if ends_sentence or too_long:
+            flush()
+    flush()
+    return segments
 
 # Cache the (potentially large) model across calls in the same process.
 _MODEL_CACHE: dict[tuple, object] = {}
@@ -56,15 +101,22 @@ def transcribe(
         vad_filter=True,  # drop non-speech gaps -> tighter segment windows
     )
 
-    segments: list[Segment] = []
-    for i, seg in enumerate(raw_segments):
+    # Collect word timestamps across all Whisper segments, then rebuild on sentence
+    # boundaries. Fall back to raw segments if a model/run yields no word timings.
+    words: list[tuple[float, float, str]] = []
+    fallback: list[Segment] = []
+    for seg in raw_segments:
         text = (seg.text or "").strip()
-        if not text:
-            continue
-        segments.append(
-            Segment(index=len(segments), start=float(seg.start), end=float(seg.end), text=text)
-        )
+        if text:
+            fallback.append(
+                Segment(index=len(fallback), start=float(seg.start), end=float(seg.end), text=text)
+            )
+        for w in seg.words or []:
+            if w.word:
+                words.append((float(w.start), float(w.end), w.word))
+
+    segments = build_sentence_segments(words) if words else fallback
 
     detected = info.language or (language or "unknown")
-    log.success(f"{len(segments)} segments, source language = {detected}")
+    log.success(f"{len(segments)} sentence segments, source language = {detected}")
     return segments, detected
