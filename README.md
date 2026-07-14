@@ -85,6 +85,26 @@ export HF_TOKEN=hf_xxx
 ytdub dub URL --diarize
 ```
 
+## No GPU? It still works
+
+The pipeline auto-detects your hardware: with no GPU it simply runs on **CPU** — nothing
+to configure. Download, transcription (faster-whisper `int8`), translation (Argos),
+synchronization and muxing are all comfortable on a plain laptop.
+
+The one slow part on CPU is the neural **voice cloning (TTS)**. Rule of thumb: short
+clips (Shorts, a few minutes) are fine; long videos take a while. To keep CPU snappy:
+
+```bash
+ytdub dub URL --asr-model base      # smaller Whisper (tiny/base) = faster ASR
+ytdub dub URL --tts openvoice       # lighter on CPU than XTTS
+# keep --translator argos (default); avoid --nllb and --diarize on CPU
+```
+
+**Want a GPU without owning one — for free?** Run it on **Google Colab** or **Kaggle**
+(free T4 GPU): create a notebook, `!pip install "ytdub[xtts] @ git+<repo>"`, then call
+`ytdub dub ...` in a cell. Same tool, ~real-time. Ask and I'll drop in a ready-to-run
+Colab notebook.
+
 ## Choosing the engines (all free/open-source)
 
 **Translation**
