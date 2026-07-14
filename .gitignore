@@ -213,3 +213,5 @@ data_def.log
 /data_final/
 data_final.log
 /tools/
+/data_ls/
+data_ls.log
