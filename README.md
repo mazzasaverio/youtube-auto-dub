@@ -154,8 +154,9 @@ Colab notebook.
 
 **Voice cloning / TTS**
 - `chatterbox` — Chatterbox Multilingual (Resemble AI): **MIT**, clean `pip install`,
-  23 languages, higher fidelity than XTTS in 2026 blind tests, emotion control.
-  The recommended backend when you want quality + a permissive license:
+  23 languages, emotion control. **Recommended for quality + a permissive license.**
+  On our real test short it improved speaker-timbre similarity to the original voice
+  from **0.784 (XTTS) to 0.834** — at the cost of being slower on CPU.
   `uv pip install -e ".[chatterbox]"` then `--tts chatterbox`.
 - `xtts` *(default)* — Coqui XTTS-v2: 17 languages, CPU-capable.
   License CPML (free to use; commercial use needs registration).
