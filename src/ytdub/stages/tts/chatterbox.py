@@ -30,10 +30,21 @@ class ChatterboxBackend:
 
     def _get_model(self):
         if self._model is None:
+            import torch
             from chatterbox.mtl_tts import ChatterboxMultilingualTTS  # lazy
 
             log.info(f"Loading Chatterbox Multilingual on {self.device} (first run downloads weights)")
-            self._model = ChatterboxMultilingualTTS.from_pretrained(device=self.device)
+            if self.device == "cpu" and not torch.cuda.is_available():
+                # Some chatterbox-tts builds torch.load a CUDA-saved tensor without a
+                # map_location; force CPU so it loads on a GPU-less machine.
+                _orig = torch.load
+                torch.load = lambda *a, **k: _orig(*a, **{**k, "map_location": "cpu"})
+                try:
+                    self._model = ChatterboxMultilingualTTS.from_pretrained(device="cpu")
+                finally:
+                    torch.load = _orig
+            else:
+                self._model = ChatterboxMultilingualTTS.from_pretrained(device=self.device)
         return self._model
 
     def synthesize(self, text: str, speaker_wav: Path, language: str, out_path: Path) -> Path:
