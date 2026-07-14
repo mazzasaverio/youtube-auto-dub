@@ -149,11 +149,20 @@ def dub(source: str, settings: Settings | None = None) -> DubResult:
         work_dir=work / "aligned",
     )
 
-    # 7. Mux onto the original video.
+    # 7. Combine video + dubbed audio. With lip-sync on, Wav2Lip re-renders the mouth
+    #    to match the new speech; otherwise we just swap the audio track.
     out_path = settings.output_dir / f"{dl.video_id}.{target}.mp4"
-    assemble.assemble(
-        dl.video_path, dubbed_audio, out_path, reencode_video=settings.reencode_video
-    )
+    if settings.lipsync:
+        from ytdub.ffmpeg import faststart_remux
+        from ytdub.stages.lipsync import lipsync
+
+        raw = work / "lipsynced.mp4"
+        lipsync(dl.video_path, dubbed_audio, raw)
+        faststart_remux(raw, out_path)  # make it share-ready (WhatsApp)
+    else:
+        assemble.assemble(
+            dl.video_path, dubbed_audio, out_path, reencode_video=settings.reencode_video
+        )
 
     # 8. Translated subtitles sidecar (handy for review and sharing).
     srt_path = settings.output_dir / f"{dl.video_id}.{target}.srt"

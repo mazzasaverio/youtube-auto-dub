@@ -138,6 +138,22 @@ def test_align_raises_without_audio(tmp_path):
         )
 
 
+def test_build_wav2lip_cmd():
+    from pathlib import Path
+
+    from ytdub.stages.lipsync import build_wav2lip_cmd
+
+    cmd = build_wav2lip_cmd(
+        "python", Path("/w2l"), Path("/w2l/ckpt.pth"),
+        Path("in.mp4"), Path("dub.wav"), Path("out.mp4"),
+    )
+    assert cmd[0] == "python" and cmd[1] == "/w2l/inference.py"
+    assert "--checkpoint_path" in cmd and "/w2l/ckpt.pth" in cmd
+    assert cmd[cmd.index("--face") + 1] == "in.mp4"
+    assert cmd[cmd.index("--audio") + 1] == "dub.wav"
+    assert cmd[cmd.index("--outfile") + 1] == "out.mp4"
+
+
 def test_srt_timestamp_and_write(tmp_path):
     from ytdub.subtitles import _timestamp, write_srt
 

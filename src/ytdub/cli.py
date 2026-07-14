@@ -33,6 +33,9 @@ def dub(
     diarize: bool = typer.Option(
         False, "--diarize", help="Detect speakers and clone one voice each (needs HF_TOKEN)."
     ),
+    lipsync: bool = typer.Option(
+        False, "--lipsync", help="Re-render the mouth to match the dub (Wav2Lip; see README)."
+    ),
     translator: str = typer.Option(
         "argos", "--translator", help="Translator: 'argos' (offline) or 'nllb'."
     ),
@@ -66,6 +69,7 @@ def dub(
         target_lang=target,
         tts_backend=tts,
         diarize=diarize,
+        lipsync=lipsync,
         translator=translator,
         asr_model=asr_model,
         reencode_video=reencode,

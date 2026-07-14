@@ -78,6 +78,40 @@ ytdub dub URL --reencode                       # force H.264 for max compatibili
 ytdub info                                     # show version + detected device
 ```
 
+### Best quality
+
+For the most fluent result, use a bigger ASR model and the neural translator:
+
+```bash
+uv pip install -e ".[xtts,nllb]"
+ytdub dub URL --asr-model medium --translator nllb
+```
+
+Transcription is rebuilt on **sentence boundaries** (from word timestamps), which gives
+cleaner translations and more natural timing — on a real 32 s clip this cut the segments
+that needed time-stretching from 6/6 down to 1/4.
+
+### Lip-sync (experimental, open-source)
+
+Make the on-screen mouth match the dub using **Wav2Lip**. It runs in its *own*
+environment (its `librosa` pin conflicts with coqui-tts), driven via subprocess:
+
+```bash
+# one-time setup, in a separate folder
+git clone https://github.com/Rudrabha/Wav2Lip && cd Wav2Lip
+python -m venv .venv && . .venv/bin/activate && pip install -r requirements.txt
+# download the wav2lip_gan.pth checkpoint into Wav2Lip/checkpoints/ (see their README)
+
+# then point ytdub at it and enable --lipsync
+export YTDUB_WAV2LIP_DIR=/path/to/Wav2Lip
+export YTDUB_WAV2LIP_CKPT=/path/to/Wav2Lip/checkpoints/wav2lip_gan.pth
+export YTDUB_WAV2LIP_PYTHON=/path/to/Wav2Lip/.venv/bin/python
+ytdub dub URL --target en --lipsync
+```
+
+Wav2Lip is **slow on CPU** — use a GPU (or the free Colab/Kaggle path above) for
+practical speed.
+
 ### Multi-voice (multiple speakers)
 
 By default the whole video is dubbed in one cloned voice. To detect each speaker and
@@ -177,8 +211,9 @@ Everything is overridable via CLI flags or `YTDUB_*` env vars (or a `.env` file)
 
 - Length-aware translation (ask the MT model for a shorter/longer rendering to fit the
   time window before falling back to time-stretch).
-- Burned-in / sidecar translated subtitles.
+- Reduce tail hallucinations (constrain MT on very short trailing fragments).
 - Overlap-aware placement so tightly-packed multi-speaker turns don't collide.
+- Package Wav2Lip setup into a one-command helper.
 
 ## Reference & inspiration
 

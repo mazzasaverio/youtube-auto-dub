@@ -28,6 +28,18 @@ def _run(args: list[str]) -> None:
         raise RuntimeError(f"ffmpeg failed ({' '.join(args[:6])} ...):\n{proc.stderr[-2000:]}")
 
 
+def faststart_remux(src: Path, dst: Path) -> Path:
+    """Copy streams into a share-ready MP4 (AAC audio + ``+faststart``), no re-encode of video."""
+    ensure_ffmpeg()
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    _run([
+        "ffmpeg", "-y", "-i", str(src),
+        "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
+        "-movflags", "+faststart", str(dst),
+    ])
+    return dst
+
+
 def probe_duration(path: Path) -> float:
     """Return media duration in seconds via ffprobe (0.0 if unknown)."""
     exe = shutil.which("ffprobe")

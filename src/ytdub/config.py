@@ -89,6 +89,11 @@ class Settings(BaseSettings):
     max_speedup: float = 1.4
     max_slowdown: float = 0.85
 
+    # --- Lip-sync (optional, Wav2Lip via subprocess) ---------------------
+    # Re-render the mouth to match the dubbed audio. Needs Wav2Lip configured via
+    # YTDUB_WAV2LIP_DIR / YTDUB_WAV2LIP_CKPT (see README). GPU strongly recommended.
+    lipsync: bool = False
+
     # --- Output -----------------------------------------------------------
     # Re-encode the video to broadly-compatible H.264 for messaging apps when the
     # source codec is exotic. Off by default (stream-copy is fast and lossless);
