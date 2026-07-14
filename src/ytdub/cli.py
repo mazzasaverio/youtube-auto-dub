@@ -45,6 +45,11 @@ def dub(
     translator: str = typer.Option(
         "argos", "--translator", help="Translator: 'argos' (offline) or 'nllb'."
     ),
+    target_cps: float = typer.Option(
+        15.0, "--target-cps",
+        help="Length-aware target speaking rate (chars/sec) for NLLB; lower = more "
+        "concise translations & less time-stretch. 0 disables. Only affects NLLB.",
+    ),
     asr_model: str = typer.Option(
         "small", "--asr-model", help="Whisper size: tiny/base/small/medium/large-v3."
     ),
@@ -79,6 +84,7 @@ def dub(
         burn_subtitles=subtitles,
         subtitle_font_size=sub_size,
         translator=translator,
+        target_chars_per_sec=target_cps,
         asr_model=asr_model,
         reencode_video=reencode,
         cookies_from_browser=cookies_from_browser,

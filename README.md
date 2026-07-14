@@ -93,6 +93,12 @@ Transcription is rebuilt on **sentence boundaries** (from word timestamps), whic
 cleaner translations and more natural timing — on a real 32 s clip this cut the segments
 that needed time-stretching from 6/6 down to 1/4.
 
+**Rhythm control (`--target-cps`).** NLLB translation is *length-aware*: each segment gets
+a character budget from its time window, and the model's most concise fitting rendering is
+chosen so the dub is sped up less. Lower `--target-cps` (default 15) for more concise
+translations (looser rhythm), higher for more faithful ones. On a fast English → Italian
+clip this cut over-compressed segments from ~86% to ~56%.
+
 ### Lip-sync (experimental, open-source)
 
 Make the on-screen mouth match the dub using **Wav2Lip**. It runs in its *own*
