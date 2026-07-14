@@ -47,7 +47,10 @@ class ArgosTranslator:
         package.install_from_path(pkg.download())
         self._installed.add(pair)
 
-    def translate(self, text: str, source_lang: str, target_lang: str) -> str:
+    def translate(
+        self, text: str, source_lang: str, target_lang: str, max_chars: int | None = None
+    ) -> str:
+        # Argos returns a single translation; the length budget doesn't apply here.
         if source_lang == target_lang or not text.strip():
             return text
         self._ensure_pair(source_lang, target_lang)

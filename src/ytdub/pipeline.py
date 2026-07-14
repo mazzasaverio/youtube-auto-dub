@@ -124,7 +124,11 @@ def dub(source: str, settings: Settings | None = None) -> DubResult:
     target = settings.target_lang
     if source_lang != target:
         translator = get_translator(settings.translator)
-        segments = translate_segments(segments, translator, source_lang, target)
+        segments = translate_segments(
+            segments, translator, source_lang, target,
+            chars_per_sec=settings.target_chars_per_sec or None,
+            max_speedup=settings.max_speedup,
+        )
         log.success(f"Translated {len(segments)} segments {source_lang}->{target}")
     else:
         segments = [s.with_translation(s.text) for s in segments]

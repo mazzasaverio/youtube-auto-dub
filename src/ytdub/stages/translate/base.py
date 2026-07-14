@@ -19,9 +19,17 @@ from ytdub.models import Segment
 
 
 class Translator(Protocol):
-    """Translate source-language text into the target language."""
+    """Translate source-language text into the target language.
 
-    def translate(self, text: str, source_lang: str, target_lang: str) -> str: ...
+    ``max_chars`` is an optional *soft* length budget: backends that can produce several
+    candidates (e.g. NLLB) use it to prefer a rendering that fits the segment's time
+    window, which reduces how much the dub has to be sped up. Backends that can't just
+    ignore it.
+    """
+
+    def translate(
+        self, text: str, source_lang: str, target_lang: str, max_chars: int | None = None
+    ) -> str: ...
 
 
 def get_translator(name: str) -> Translator:
@@ -39,15 +47,28 @@ def get_translator(name: str) -> Translator:
 
 
 def translate_segments(
-    segments: list[Segment], translator: Translator, source_lang: str, target_lang: str
+    segments: list[Segment],
+    translator: Translator,
+    source_lang: str,
+    target_lang: str,
+    *,
+    chars_per_sec: float | None = None,
+    max_speedup: float = 1.4,
 ) -> list[Segment]:
     """Translate each segment's text, returning new segments with ``.translated`` set.
 
-    Empty translations fall back to the source text so a segment is never silently
-    dropped from the dubbed timeline.
+    When ``chars_per_sec`` is given, each segment gets a length budget derived from its
+    time window (``duration * chars_per_sec * max_speedup``) so the translator can favour
+    a rendering that fits — this is what tightens the dub's rhythm. Empty translations
+    fall back to the source text so a segment is never silently dropped.
     """
     out: list[Segment] = []
     for seg in segments:
-        translated = translator.translate(seg.text, source_lang, target_lang).strip()
+        budget = None
+        if chars_per_sec:
+            budget = max(20, int(seg.duration * chars_per_sec * max_speedup))
+        translated = translator.translate(
+            seg.text, source_lang, target_lang, max_chars=budget
+        ).strip()
         out.append(seg.with_translation(translated or seg.text))
     return out

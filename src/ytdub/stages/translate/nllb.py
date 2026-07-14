@@ -51,7 +51,9 @@ class NllbTranslator:
             model = model.to(device)
         return tokenizer, model, device
 
-    def translate(self, text: str, source_lang: str, target_lang: str) -> str:
+    def translate(
+        self, text: str, source_lang: str, target_lang: str, max_chars: int | None = None
+    ) -> str:
         if source_lang == target_lang or not text.strip():
             return text
         tokenizer, model, device = self._load()
@@ -62,14 +64,29 @@ class NllbTranslator:
         bos = tokenizer.convert_tokens_to_ids(_nllb_code(target_lang))
 
         # Anti-hallucination: on short/odd fragments NLLB tends to run off and invent
-        # boilerplate. Cap output length to ~2x the input and discourage repetition so a
-        # trailing "non imploriamo mai" can't turn into an unrelated paragraph.
+        # boilerplate. Cap output length to ~2x the input and discourage repetition.
         input_len = int(inputs["input_ids"].shape[1])
-        generated = model.generate(
-            **inputs,
+        base = dict(
             forced_bos_token_id=bos,
             max_new_tokens=min(400, input_len * 2 + 16),
-            num_beams=5,
             no_repeat_ngram_size=3,
         )
-        return tokenizer.batch_decode(generated, skip_special_tokens=True)[0]
+
+        if not max_chars:
+            generated = model.generate(**inputs, **base, num_beams=5)
+            return tokenizer.batch_decode(generated, skip_special_tokens=True)[0]
+
+        # Length-aware: diverse beam search yields varied phrasings; pick the fullest
+        # rendering that fits the time budget, else the shortest to minimise the
+        # speed-up the sync stage would otherwise apply.
+        generated = model.generate(
+            **inputs, **base,
+            num_beams=6, num_beam_groups=3, diversity_penalty=1.0,
+            num_return_sequences=6,
+        )
+        cands = [c.strip() for c in tokenizer.batch_decode(generated, skip_special_tokens=True)]
+        cands = list(dict.fromkeys(c for c in cands if c))  # dedup, keep order
+        if not cands:
+            return text
+        under = [c for c in cands if len(c) <= max_chars]
+        return max(under, key=len) if under else min(cands, key=len)

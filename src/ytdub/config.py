@@ -72,6 +72,10 @@ class Settings(BaseSettings):
 
     # --- Translation ------------------------------------------------------
     translator: str = "argos"  # "argos" (offline default) | "nllb"
+    # Length-aware translation budget: target speaking rate (characters/second) used to
+    # size each segment's translation so it fits its time window. Only NLLB uses it.
+    # 0 disables length-aware selection.
+    target_chars_per_sec: float = 15.0
 
     # --- TTS / voice cloning ---------------------------------------------
     tts_backend: str = "chatterbox"  # "chatterbox" (MIT, default) | "xtts" | "openvoice"
