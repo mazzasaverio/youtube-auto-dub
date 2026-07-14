@@ -62,9 +62,14 @@ def download(
     outtmpl = str(downloads_dir / "%(id)s.%(ext)s")
     cookie_opts = _cookie_opts(cookies_from_browser, cookies_file)
 
-    # First pass: grab the muxed MP4 we will later re-dub.
+    # First pass: grab the muxed MP4 we will later re-dub. Prefer H.264 (avc1) so the
+    # copied video stream plays everywhere (WhatsApp/older phones choke on AV1/VP9);
+    # fall back to any mp4, then anything.
     video_opts = {
-        "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
+        "format": (
+            "bestvideo[vcodec^=avc1]+bestaudio[ext=m4a]/best[vcodec^=avc1]/"
+            "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best"
+        ),
         "merge_output_format": "mp4",
         "outtmpl": outtmpl,
         "quiet": True,
