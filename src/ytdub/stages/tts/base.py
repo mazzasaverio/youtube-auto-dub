@@ -37,7 +37,13 @@ def get_tts(name: str, device: str) -> TTSBackend:
         from ytdub.stages.tts.openvoice_v2 import OpenVoiceV2Backend
 
         return OpenVoiceV2Backend(device=device)
-    raise ValueError(f"Unknown TTS backend: {name!r} (expected 'xtts' or 'openvoice')")
+    if name == "chatterbox":
+        from ytdub.stages.tts.chatterbox import ChatterboxBackend
+
+        return ChatterboxBackend(device=device)
+    raise ValueError(
+        f"Unknown TTS backend: {name!r} (expected 'xtts', 'chatterbox' or 'openvoice')"
+    )
 
 
 def synthesize_segments(

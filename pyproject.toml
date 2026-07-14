@@ -37,6 +37,9 @@ xtts = [
     "transformers>=4.43,<5",
     "numpy<2.1",
 ]
+# Chatterbox Multilingual (Resemble AI) — MIT, cleaner install, higher fidelity than
+# XTTS. A strong alternative default: `--tts chatterbox`.
+chatterbox = ["chatterbox-tts>=0.1.1"]
 # Fully-MIT alternative cloning TTS: OpenVoice v2 + MeloTTS.
 # Install notes are in the README (MeloTTS ships from git + `unidic` download).
 openvoice = ["myshell-openvoice", "melotts", "unidic"]

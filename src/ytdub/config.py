@@ -74,7 +74,7 @@ class Settings(BaseSettings):
     translator: str = "argos"  # "argos" (offline default) | "nllb"
 
     # --- TTS / voice cloning ---------------------------------------------
-    tts_backend: str = "xtts"  # "xtts" (default) | "openvoice"
+    tts_backend: str = "xtts"  # "xtts" (default) | "chatterbox" (MIT) | "openvoice"
 
     # --- Diarization (multi-voice) ---------------------------------------
     # When True, detect speakers and clone one voice per speaker. Needs the

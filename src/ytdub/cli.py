@@ -29,7 +29,9 @@ def dub(
     source: str | None = typer.Option(
         None, "--source", "-s", help="Source language; omit to auto-detect."
     ),
-    tts: str = typer.Option("xtts", "--tts", help="TTS backend: 'xtts' or 'openvoice'."),
+    tts: str = typer.Option(
+        "xtts", "--tts", help="TTS backend: 'xtts', 'chatterbox' (MIT) or 'openvoice'."
+    ),
     diarize: bool = typer.Option(
         False, "--diarize", help="Detect speakers and clone one voice each (needs HF_TOKEN)."
     ),
