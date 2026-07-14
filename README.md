@@ -167,6 +167,9 @@ Colab notebook.
   On a CUDA machine, drop the `--index-url` line (use default torch) — torchcodec works
   there. The `[xtts]` extra encodes the transformers/numpy pins so you don't hit them.
 - `openvoice` — OpenVoice v2 (MeloTTS + tone-color converter), **MIT** end to end.
+  Heads-up: the `myshell-openvoice` package hard-pins ancient deps
+  (`faster-whisper==0.9.0`, old `av`/`librosa`) that don't resolve against a modern
+  stack, so it needs its own legacy environment. XTTS is the recommended default.
   Extra setup:
   ```bash
   uv pip install -e ".[openvoice]"
