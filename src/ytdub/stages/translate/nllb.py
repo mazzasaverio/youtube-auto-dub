@@ -60,5 +60,16 @@ class NllbTranslator:
         if device in ("cuda", "mps"):
             inputs = {k: v.to(device) for k, v in inputs.items()}
         bos = tokenizer.convert_tokens_to_ids(_nllb_code(target_lang))
-        generated = model.generate(**inputs, forced_bos_token_id=bos, max_length=512)
+
+        # Anti-hallucination: on short/odd fragments NLLB tends to run off and invent
+        # boilerplate. Cap output length to ~2x the input and discourage repetition so a
+        # trailing "non imploriamo mai" can't turn into an unrelated paragraph.
+        input_len = int(inputs["input_ids"].shape[1])
+        generated = model.generate(
+            **inputs,
+            forced_bos_token_id=bos,
+            max_new_tokens=min(400, input_len * 2 + 16),
+            num_beams=5,
+            no_repeat_ngram_size=3,
+        )
         return tokenizer.batch_decode(generated, skip_special_tokens=True)[0]
