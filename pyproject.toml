@@ -45,8 +45,10 @@ chatterbox = ["chatterbox-tts>=0.1.1"]
 openvoice = ["myshell-openvoice", "melotts", "unidic"]
 # Higher-quality neural MT alternative to Argos (heavier, pulls in torch).
 nllb = ["transformers>=4.44", "torch>=2.2", "sentencepiece>=0.2"]
-# Multi-voice: speaker diarization via pyannote (needs a free Hugging Face token).
-diarize = ["pyannote.audio>=3.3", "torch>=2.2"]
+# Multi-voice, token-free (default): speaker-embedding clustering via Resemblyzer.
+diarize = ["resemblyzer>=0.1.4"]
+# Multi-voice, higher accuracy: pyannote (needs a free Hugging Face token).
+diarize-pyannote = ["pyannote.audio>=3.3", "torch>=2.2"]
 # Lip-sync (Wav2Lip) runs in its OWN environment via subprocess (its librosa pin
 # conflicts with coqui-tts), so there is no in-process extra to install here — see the
 # README "Lip-sync" section for the Wav2Lip setup.

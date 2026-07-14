@@ -77,8 +77,8 @@ def assign_speakers(segments: list[Segment], turns: list[SpeakerTurn]) -> list[S
 def diarize(audio_path: Path, *, device: str = "cpu", hf_token: str | None = None) -> list[SpeakerTurn]:
     """Run pyannote speaker diarization and return the speaker turns.
 
-    Requires ``pip install 'ytdub[diarize]'`` and a Hugging Face token (env ``HF_TOKEN``)
-    after accepting the model terms at hf.co/pyannote/speaker-diarization-3.1.
+    Requires ``pip install 'ytdub[diarize-pyannote]'`` and a Hugging Face token (env
+    ``HF_TOKEN``) after accepting the model terms at hf.co/pyannote/speaker-diarization-3.1.
     """
     from pyannote.audio import Pipeline  # lazy, heavy
 

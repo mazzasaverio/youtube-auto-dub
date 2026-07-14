@@ -83,7 +83,7 @@ class Settings(BaseSettings):
     # --- Diarization (multi-voice) ---------------------------------------
     # When True, detect speakers and clone one voice per speaker.
     #   method "embedding" (default): token-free (Resemblyzer + clustering).
-    #   method "pyannote": more accurate, needs the [diarize] extra + HF token.
+    #   method "pyannote": more accurate, needs the [diarize-pyannote] extra + HF token.
     # num_speakers 0 = auto-estimate.
     diarize: bool = False
     diarize_method: str = "embedding"

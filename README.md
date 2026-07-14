@@ -126,14 +126,19 @@ Wav2Lip is **slow on CPU** — use a GPU. Two ready Colab notebooks (free T4 GPU
 
 ### Multi-voice (multiple speakers)
 
-By default the whole video is dubbed in one cloned voice. To detect each speaker and
-clone a *separate* voice per speaker:
+By default the whole video is dubbed in one cloned voice. `--diarize` detects each
+speaker and clones a *separate* voice per speaker. Two backends:
 
 ```bash
-uv pip install -e ".[xtts,diarize]"
-# accept terms at hf.co/pyannote/speaker-diarization-3.1, then:
-export HF_TOKEN=hf_xxx
-ytdub dub URL --diarize
+# Token-free (default): speaker-embedding clustering — no gated models, no HF token.
+uv pip install -e ".[chatterbox,diarize]"
+ytdub dub URL --diarize --speakers 2        # or --speakers 0 to auto-estimate
+
+# Higher accuracy: pyannote (needs a free HF token + one-time terms acceptance).
+uv pip install -e ".[chatterbox,diarize-pyannote]"
+export HF_TOKEN=hf_xxx                        # after accepting terms at
+                                              # hf.co/pyannote/speaker-diarization-3.1
+ytdub dub URL --diarize --diarize-method pyannote
 ```
 
 ## No GPU? It still works
