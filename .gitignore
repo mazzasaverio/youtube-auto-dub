@@ -208,3 +208,5 @@ cython_debug/
 .venv*/
 /data3/
 /data_cb/
+/data_def/
+data_def.log
