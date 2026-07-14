@@ -27,8 +27,10 @@ jobs:
             pydub numpy soundfile pytest ruff yt-dlp
           uv pip install -e . --no-deps
 
+      # Call the venv tools directly — NOT `uv run`, which would re-sync the whole
+      # project (and try to build the un-buildable OpenVoice legacy deps).
       - name: Lint
-        run: uv run ruff check src tests examples
+        run: .venv/bin/ruff check src tests examples
 
       - name: Test
-        run: uv run pytest -q
+        run: .venv/bin/pytest -q

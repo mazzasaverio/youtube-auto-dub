@@ -40,9 +40,10 @@ xtts = [
 # Chatterbox Multilingual (Resemble AI) — MIT, cleaner install, higher fidelity than
 # XTTS. A strong alternative default: `--tts chatterbox`.
 chatterbox = ["chatterbox-tts>=0.1.1"]
-# Fully-MIT alternative cloning TTS: OpenVoice v2 + MeloTTS.
-# Install notes are in the README (MeloTTS ships from git + `unidic` download).
-openvoice = ["myshell-openvoice", "melotts", "unidic"]
+# NOTE: OpenVoice v2 has no working pip extra — `myshell-openvoice` hard-pins ancient
+# deps (faster-whisper==0.9.0) and `melotts` fails to build, so it can't resolve against
+# a modern stack. The `openvoice` TTS backend still works if you set it up in a dedicated
+# legacy environment by hand (see the README "OpenVoice" note). Prefer `chatterbox`/`xtts`.
 # Higher-quality neural MT alternative to Argos (heavier, pulls in torch).
 nllb = ["transformers>=4.44", "torch>=2.2", "sentencepiece>=0.2"]
 # Multi-voice, token-free (default): speaker-embedding clustering via Resemblyzer.
@@ -70,6 +71,8 @@ packages = ["src/ytdub"]
 [tool.ruff]
 line-length = 100
 target-version = "py310"
+# Colab notebooks follow their own conventions (mid-cell imports, google.colab).
+extend-exclude = ["*.ipynb"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

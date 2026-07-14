@@ -187,14 +187,14 @@ Colab notebook.
   ```
   On a CUDA machine, drop the `--index-url` line (use default torch) — torchcodec works
   there. The `[xtts]` extra encodes the transformers/numpy pins so you don't hit them.
-- `openvoice` — OpenVoice v2 (MeloTTS + tone-color converter), **MIT** end to end.
-  Heads-up: the `myshell-openvoice` package hard-pins ancient deps
-  (`faster-whisper==0.9.0`, old `av`/`librosa`) that don't resolve against a modern
-  stack, so it needs its own legacy environment. XTTS is the recommended default.
-  Extra setup:
+- `openvoice` — OpenVoice v2 (MeloTTS + tone-color converter), MIT. **No pip extra**:
+  `myshell-openvoice` hard-pins ancient deps (`faster-whisper==0.9.0`, old `av`/`librosa`)
+  that don't resolve against a modern stack, so it only works in a **dedicated legacy
+  environment** you set up by hand. Prefer `chatterbox`/`xtts`. If you really need it:
   ```bash
-  uv pip install -e ".[openvoice]"
-  python -m unidic download
+  # in a separate venv, not the main one
+  pip install --no-deps myshell-openvoice && pip install wavmark "setuptools<80"
+  pip install git+https://github.com/myshell-ai/MeloTTS.git && python -m unidic download
   # download the OpenVoice v2 checkpoints, then:
   export YTDUB_OPENVOICE_CKPT=/path/to/checkpoints_v2
   ```
