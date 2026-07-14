@@ -44,19 +44,24 @@ def synthesize_segments(
     segments: list[Segment],
     tts: TTSBackend,
     *,
-    speaker_wav: Path,
+    speaker_wavs: dict[str | None, Path],
     language: str,
     out_dir: Path,
 ) -> list[Segment]:
-    """Synthesize a per-segment audio clip in the cloned voice.
+    """Synthesize a per-segment audio clip in the cloned voice of the segment's speaker.
+
+    ``speaker_wavs`` maps a speaker label to its reference clip; ``None`` is the default
+    voice used for unlabeled segments (single-voice mode has just ``{None: clip}``).
 
     Returns new segments with ``.audio_path`` set. Segments whose synthesis fails are
     logged and left without audio (the sync stage will treat them as silence).
     """
     out_dir.mkdir(parents=True, exist_ok=True)
+    default_wav = speaker_wavs.get(None) or next(iter(speaker_wavs.values()))
     out: list[Segment] = []
     for seg in segments:
         text = seg.translated or seg.text
+        speaker_wav = speaker_wavs.get(seg.speaker, default_wav)
         clip = out_dir / f"seg_{seg.index:04d}.wav"
         try:
             tts.synthesize(text, speaker_wav, language, clip)

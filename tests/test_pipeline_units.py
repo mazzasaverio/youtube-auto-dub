@@ -77,6 +77,29 @@ def test_align_builds_full_length_timeline(tmp_path):
     assert len(dubbed) >= 10_000
 
 
+def test_assign_speakers_by_overlap():
+    from ytdub.stages.diarize import SpeakerTurn, assign_speakers
+
+    segments = [
+        Segment(index=0, start=0.0, end=2.0, text="a"),   # inside SPK_A
+        Segment(index=1, start=5.0, end=7.0, text="b"),   # inside SPK_B
+        Segment(index=2, start=2.5, end=3.2, text="c"),   # gap -> nearest (SPK_A)
+    ]
+    turns = [
+        SpeakerTurn(0.0, 2.2, "SPK_A"),
+        SpeakerTurn(4.8, 7.5, "SPK_B"),
+    ]
+    tagged = assign_speakers(segments, turns)
+    assert [s.speaker for s in tagged] == ["SPK_A", "SPK_B", "SPK_A"]
+
+
+def test_assign_speakers_no_turns_is_noop():
+    from ytdub.stages.diarize import assign_speakers
+
+    segments = [Segment(index=0, start=0.0, end=1.0, text="a")]
+    assert assign_speakers(segments, []) == segments
+
+
 def test_align_raises_without_audio(tmp_path):
     from ytdub.stages.synchronize import align
 

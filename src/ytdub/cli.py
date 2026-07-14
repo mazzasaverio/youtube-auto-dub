@@ -28,6 +28,9 @@ def dub(
         None, "--source", "-s", help="Source language; omit to auto-detect."
     ),
     tts: str = typer.Option("xtts", "--tts", help="TTS backend: 'xtts' or 'openvoice'."),
+    diarize: bool = typer.Option(
+        False, "--diarize", help="Detect speakers and clone one voice each (needs HF_TOKEN)."
+    ),
     translator: str = typer.Option(
         "argos", "--translator", help="Translator: 'argos' (offline) or 'nllb'."
     ),
@@ -60,6 +63,7 @@ def dub(
         source_lang=source,
         target_lang=target,
         tts_backend=tts,
+        diarize=diarize,
         translator=translator,
         asr_model=asr_model,
         reencode_video=reencode,

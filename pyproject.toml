@@ -32,6 +32,8 @@ xtts = ["coqui-tts>=0.25.0"]
 openvoice = ["myshell-openvoice", "melotts", "unidic"]
 # Higher-quality neural MT alternative to Argos (heavier, pulls in torch).
 nllb = ["transformers>=4.44", "torch>=2.2", "sentencepiece>=0.2"]
+# Multi-voice: speaker diarization via pyannote (needs a free Hugging Face token).
+diarize = ["pyannote.audio>=3.3", "torch>=2.2"]
 # Optional FastAPI server (the CLI is the primary entry point).
 api = ["fastapi>=0.115", "uvicorn>=0.30"]
 # Developer tooling.

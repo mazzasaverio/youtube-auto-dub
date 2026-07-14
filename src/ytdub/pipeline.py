@@ -18,27 +18,40 @@ from ytdub.models import DubResult, Segment
 log = stage_logger("pipeline")
 
 
-def build_reference_clip(
-    source_audio: Path, segments: list[Segment], out_path: Path, max_seconds: float = 20.0
-) -> Path:
-    """Concatenate the first voiced segments into a clean reference for voice cloning.
+def build_reference_clips(
+    source_audio: Path,
+    segments: list[Segment],
+    out_dir: Path,
+    max_seconds: float = 20.0,
+) -> dict[str | None, Path]:
+    """Build one clean voice reference per speaker for cloning.
 
-    Using actual speech spans (rather than a blind head crop) keeps intro music or
-    silence out of the timbre reference the cloning model sees.
+    Segments are grouped by ``.speaker`` (all ``None`` in single-voice mode), and each
+    speaker's own speech spans are concatenated — using real speech rather than a blind
+    head crop keeps intro music/silence out of the timbre reference. Returns a mapping
+    ``speaker -> reference.wav``.
     """
     from pydub import AudioSegment
 
     audio = AudioSegment.from_file(source_audio)
-    ref = AudioSegment.empty()
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    by_speaker: dict[str | None, AudioSegment] = {}
     for seg in segments:
-        ref += audio[int(seg.start * 1000) : int(seg.end * 1000)]
+        ref = by_speaker.setdefault(seg.speaker, AudioSegment.empty())
         if len(ref) >= max_seconds * 1000:
-            break
-    if len(ref) == 0:  # fallback: head crop
-        ref = audio[: int(max_seconds * 1000)]
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    ref[: int(max_seconds * 1000)].export(out_path, format="wav")
-    return out_path
+            continue
+        by_speaker[seg.speaker] = ref + audio[int(seg.start * 1000) : int(seg.end * 1000)]
+
+    clips: dict[str | None, Path] = {}
+    for speaker, ref in by_speaker.items():
+        if len(ref) == 0:  # fallback: head crop
+            ref = audio[: int(max_seconds * 1000)]
+        name = "reference.wav" if speaker is None else f"reference_{speaker}.wav"
+        path = out_dir / name
+        ref[: int(max_seconds * 1000)].export(path, format="wav")
+        clips[speaker] = path
+    return clips
 
 
 def dub(url: str, settings: Settings | None = None) -> DubResult:
@@ -72,6 +85,15 @@ def dub(url: str, settings: Settings | None = None) -> DubResult:
     if not segments:
         raise RuntimeError("Transcription produced no speech segments.")
 
+    # 2b. Optional diarization -> tag each segment with a speaker (multi-voice).
+    if settings.diarize:
+        from ytdub.stages.diarize import assign_speakers, diarize as run_diarize
+
+        turns = run_diarize(dl.audio_path, device=settings.device, hf_token=settings.hf_token)
+        segments = assign_speakers(segments, turns)
+        n = len({s.speaker for s in segments})
+        log.success(f"Diarization: {n} distinct voice(s) will be cloned")
+
     # 3. Translate segment by segment.
     target = settings.target_lang
     if source_lang != target:
@@ -82,13 +104,13 @@ def dub(url: str, settings: Settings | None = None) -> DubResult:
         segments = [s.with_translation(s.text) for s in segments]
         log.info("Source language equals target; skipping translation.")
 
-    # 4. Reference clip for voice cloning.
-    reference = build_reference_clip(dl.audio_path, segments, work / "reference.wav")
+    # 4. One voice reference per speaker (a single default voice without diarization).
+    references = build_reference_clips(dl.audio_path, segments, work / "refs")
 
-    # 5. Synthesize each segment in the cloned voice.
+    # 5. Synthesize each segment in its speaker's cloned voice.
     tts = get_tts(settings.tts_backend, settings.device)
     segments = synthesize_segments(
-        segments, tts, speaker_wav=reference, language=target, out_dir=work / "clips"
+        segments, tts, speaker_wavs=references, language=target, out_dir=work / "clips"
     )
 
     # 6. Duration alignment -> single full-length track.

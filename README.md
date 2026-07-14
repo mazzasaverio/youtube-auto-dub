@@ -59,11 +59,24 @@ caches them; later runs are offline.
 
 ```bash
 ytdub dub URL --source it --target es          # Italian → Spanish
+ytdub dub URL --diarize                        # multi-voice (one cloned voice per speaker)
 ytdub dub URL --tts openvoice                  # fully-MIT cloning backend
 ytdub dub URL --translator nllb                # higher-quality translation
 ytdub dub URL --asr-model medium               # more accurate transcription
 ytdub dub URL --reencode                       # force H.264 for max compatibility
 ytdub info                                     # show version + detected device
+```
+
+### Multi-voice (multiple speakers)
+
+By default the whole video is dubbed in one cloned voice. To detect each speaker and
+clone a *separate* voice per speaker:
+
+```bash
+uv pip install -e ".[xtts,diarize]"
+# accept terms at hf.co/pyannote/speaker-diarization-3.1, then:
+export HF_TOKEN=hf_xxx
+ytdub dub URL --diarize
 ```
 
 ## Choosing the engines (all free/open-source)
@@ -112,11 +125,10 @@ Everything is overridable via CLI flags or `YTDUB_*` env vars (or a `.env` file)
 
 ## Roadmap
 
-- **Multi-speaker** dubbing: diarization (WhisperX/pyannote) + a cloned voice per
-  speaker (the data model already carries a `speaker` field).
 - Length-aware translation (ask the MT model for a shorter/longer rendering to fit the
   time window before falling back to time-stretch).
 - Burned-in / sidecar translated subtitles.
+- Overlap-aware placement so tightly-packed multi-speaker turns don't collide.
 
 ## Reference & inspiration
 

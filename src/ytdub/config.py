@@ -76,6 +76,12 @@ class Settings(BaseSettings):
     # --- TTS / voice cloning ---------------------------------------------
     tts_backend: str = "xtts"  # "xtts" (default) | "openvoice"
 
+    # --- Diarization (multi-voice) ---------------------------------------
+    # When True, detect speakers and clone one voice per speaker. Needs the
+    # [diarize] extra and a Hugging Face token (env HF_TOKEN).
+    diarize: bool = False
+    hf_token: str | None = None
+
     # --- Synchronization --------------------------------------------------
     # Cap on how much a segment may be sped up / slowed down to fit its
     # original time window. Beyond this we let it overflow rather than make
