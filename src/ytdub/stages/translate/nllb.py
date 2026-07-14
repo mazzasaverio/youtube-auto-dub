@@ -76,13 +76,12 @@ class NllbTranslator:
             generated = model.generate(**inputs, **base, num_beams=5)
             return tokenizer.batch_decode(generated, skip_special_tokens=True)[0]
 
-        # Length-aware: diverse beam search yields varied phrasings; pick the fullest
-        # rendering that fits the time budget, else the shortest to minimise the
-        # speed-up the sync stage would otherwise apply.
+        # Length-aware: return several beam candidates (varied phrasings/lengths) and
+        # pick the fullest rendering that fits the time budget, else the shortest to
+        # minimise the speed-up the sync stage would otherwise apply. Plain beam search
+        # (no group/diverse beams) avoids transformers' trust_remote_code requirement.
         generated = model.generate(
-            **inputs, **base,
-            num_beams=6, num_beam_groups=3, diversity_penalty=1.0,
-            num_return_sequences=6,
+            **inputs, **base, num_beams=6, num_return_sequences=6,
         )
         cands = [c.strip() for c in tokenizer.batch_decode(generated, skip_special_tokens=True)]
         cands = list(dict.fromkeys(c for c in cands if c))  # dedup, keep order
