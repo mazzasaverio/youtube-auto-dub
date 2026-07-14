@@ -25,8 +25,18 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# Default cloning TTS: Coqui XTTS-v2 (multilingual, one pip install, CPU-capable).
-xtts = ["coqui-tts>=0.25.0"]
+# Default cloning TTS: Coqui XTTS-v2 (multilingual, CPU-capable).
+# The two pins below are load-bearing for coqui-tts and prevent the most common
+# install breakages (verified July 2026):
+#   * transformers 5.x removed `isin_mps_friendly`, which coqui-tts imports.
+#   * the numba/librosa stack needs numpy < 2.1.
+# For CPU machines also install torch < 2.9 (see the README "CPU recipe") to avoid
+# torchcodec, whose wheel pulls CUDA libs that a CPU-only box can't load.
+xtts = [
+    "coqui-tts>=0.25.0",
+    "transformers>=4.43,<5",
+    "numpy<2.1",
+]
 # Fully-MIT alternative cloning TTS: OpenVoice v2 + MeloTTS.
 # Install notes are in the README (MeloTTS ships from git + `unidic` download).
 openvoice = ["myshell-openvoice", "melotts", "unidic"]

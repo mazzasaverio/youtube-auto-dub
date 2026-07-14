@@ -28,7 +28,7 @@ jobs:
           uv pip install -e . --no-deps
 
       - name: Lint
-        run: uv run ruff check src tests
+        run: uv run ruff check src tests examples
 
       - name: Test
         run: uv run pytest -q

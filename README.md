@@ -13,6 +13,11 @@ works on a CPU-only laptop.
 
 ![Example](static/screen.png)
 
+**Verified end-to-end on CPU (no GPU):** a self-test that generates an Italian clip,
+dubs it to English and measures the result gives **0.00 s** timing drift (dub length ==
+source length) and **0.888** speaker-timbre cosine similarity (>0.85 ≈ same voice).
+Reproduce it with `python examples/selftest_dub.py` (needs the `[xtts]` extra).
+
 ## How it works
 
 ```
@@ -114,8 +119,19 @@ Colab notebook.
   `uv pip install -e ".[nllb]"`.
 
 **Voice cloning / TTS**
-- `xtts` *(default)* — Coqui XTTS-v2: one pip install, 17 languages, CPU-capable.
+- `xtts` *(default)* — Coqui XTTS-v2: 17 languages, CPU-capable.
   License CPML (free to use; commercial use needs registration).
+
+  **CPU install recipe (verified July 2026, Python 3.11).** coqui-tts is picky about
+  its deps; this combination works out of the box on a CPU-only machine:
+  ```bash
+  uv venv --python 3.11 && source .venv/bin/activate
+  uv pip install torch==2.6.0 torchaudio==2.6.0 \
+      --index-url https://download.pytorch.org/whl/cpu   # torch < 2.9 avoids torchcodec
+  uv pip install -e ".[xtts]"                            # pins transformers<5, numpy<2.1
+  ```
+  On a CUDA machine, drop the `--index-url` line (use default torch) — torchcodec works
+  there. The `[xtts]` extra encodes the transformers/numpy pins so you don't hit them.
 - `openvoice` — OpenVoice v2 (MeloTTS + tone-color converter), **MIT** end to end.
   Extra setup:
   ```bash
