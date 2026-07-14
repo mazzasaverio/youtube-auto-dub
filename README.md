@@ -31,7 +31,7 @@ Reproduce it with `python examples/selftest_dub.py` (needs the `[xtts]` extra).
 | Download | **yt-dlp** | The only downloader that keeps working as YouTube changes |
 | Transcribe | **faster-whisper** (word timestamps) | Precise per-segment timing — trusts the audio, not YouTube captions |
 | Translate | **Argos Translate** (offline, default) · NLLB-200 (optional) | Free, local, segment-by-segment |
-| Voice clone + TTS | **Coqui XTTS-v2** (default) · **OpenVoice v2** (MIT) | Clones the original voice, speaks the target language |
+| Voice clone + TTS | **Chatterbox** (MIT, default) · XTTS-v2 · OpenVoice v2 | Clones the original voice, speaks the target language |
 | Synchronize | **Duration alignment** (pitch-preserving time-stretch) | Keeps the dub locked to the video — the piece v0.1 lacked |
 | Assemble | **ffmpeg** (H.264 + AAC, `+faststart`) | Share-ready MP4 for messaging apps |
 
@@ -41,9 +41,10 @@ Requires **Python 3.10–3.12** and **ffmpeg** on your PATH
 (`sudo apt install ffmpeg` / `brew install ffmpeg`).
 
 ```bash
-# 1. Install (uv recommended; plain pip works too). XTTS extra = the cloning voice.
+# 1. Install (uv recommended; plain pip works too). The cloning voice is Chatterbox
+#    (MIT). For the highest-quality translation add ,nllb (see "Best quality").
 uv venv && source .venv/bin/activate
-uv pip install -e ".[xtts]"
+uv pip install -e ".[chatterbox]"
 
 # 2. Dub a video into English (source language auto-detected).
 ytdub dub "https://youtu.be/VIDEO_ID" --target en
@@ -59,8 +60,8 @@ pipeline runs without touching YouTube (great for testing or non-YouTube videos)
 ytdub dub ./my_video.mp4 --target en
 ```
 
-That's it. The first run downloads the models it needs (Whisper + XTTS ≈ 2 GB) and
-caches them; later runs are offline.
+That's it. The first run downloads the models it needs (Whisper + Chatterbox ≈ 2 GB)
+and caches them; later runs are offline.
 
 > **"Sign in to confirm you're not a bot"?** YouTube shows this on some networks
 > (datacenters, VPNs, CI — rarely on a home machine). Pass your browser's cookies:
@@ -153,13 +154,12 @@ Colab notebook.
   `uv pip install -e ".[nllb]"`.
 
 **Voice cloning / TTS**
-- `chatterbox` — Chatterbox Multilingual (Resemble AI): **MIT**, clean `pip install`,
-  23 languages, emotion control. **Recommended for quality + a permissive license.**
-  On our real test short it improved speaker-timbre similarity to the original voice
-  from **0.784 (XTTS) to 0.834** — at the cost of being slower on CPU.
-  `uv pip install -e ".[chatterbox]"` then `--tts chatterbox`.
-- `xtts` *(default)* — Coqui XTTS-v2: 17 languages, CPU-capable.
-  License CPML (free to use; commercial use needs registration).
+- `chatterbox` *(default)* — Chatterbox Multilingual (Resemble AI): **MIT**, clean
+  `pip install`, 23 languages, emotion control. On our real test short it improved
+  speaker-timbre similarity to the original voice from **0.784 (XTTS) to 0.834** — at the
+  cost of being slower on CPU. `uv pip install -e ".[chatterbox]"`.
+- `xtts` — Coqui XTTS-v2: 17 languages, CPU-capable and faster than Chatterbox.
+  License CPML (free to use; commercial use needs registration). `--tts xtts`.
 
   **CPU install recipe (verified July 2026, Python 3.11).** coqui-tts is picky about
   its deps; this combination works out of the box on a CPU-only machine:
@@ -230,5 +230,6 @@ Everything is overridable via CLI flags or `YTDUB_*` env vars (or a `.env` file)
 
 ## License
 
-MIT — see `LICENSE`. Note the XTTS-v2 model weights ship under Coqui's CPML; use the
-`openvoice` backend for a fully-MIT stack.
+MIT — see `LICENSE`. The default Chatterbox backend is MIT too. The alternative XTTS-v2
+weights ship under Coqui's CPML (non-commercial without registration), so stick with
+Chatterbox for a fully-MIT stack.
