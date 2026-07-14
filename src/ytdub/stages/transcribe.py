@@ -26,15 +26,19 @@ _SENTENCE_END = re.compile(r"[.!?…。！？]+[\"'”’)]?\s*$")
 def build_sentence_segments(
     words: list[tuple[float, float, str]],
     *,
-    max_chars: int = 200,
-    max_duration: float = 12.0,
+    max_chars: int = 140,
+    max_duration: float = 8.0,
+    max_gap: float = 0.6,
 ) -> list[Segment]:
-    """Group word timestamps into sentence-bounded segments.
+    """Group word timestamps into short, tightly-timed segments.
 
     Whisper's own segment boundaries can split mid-sentence, which hurts both
-    translation (the MT model sees fragments) and sync (odd chunk lengths). Rebuilding
-    on sentence punctuation — while capping length so a single chunk stays within what
-    the TTS handles well — gives cleaner text and more natural timing.
+    translation (the MT model sees fragments) and sync (odd chunk lengths). We rebuild on:
+      * sentence-ending punctuation,
+      * natural **pauses** — a silent gap ``> max_gap`` before the next word (this is what
+        keeps each chunk aligned to the speaker's phrasing, so the dub tracks the video
+        more tightly), and
+      * length caps (chars / duration) so a chunk stays within what the TTS handles well.
 
     ``words`` is ``(start, end, text)`` tuples in order. Pure function (unit-tested).
     """
@@ -51,13 +55,15 @@ def build_sentence_segments(
             )
         cur.clear()
 
-    for w in words:
+    for i, w in enumerate(words):
         cur.append(w)
         text_so_far = "".join(x[2] for x in cur).strip()
         duration = cur[-1][1] - cur[0][0]
         ends_sentence = bool(_SENTENCE_END.search(w[2]))
         too_long = len(text_so_far) >= max_chars or duration >= max_duration
-        if ends_sentence or too_long:
+        # A long pause before the next word marks a natural phrase boundary.
+        pause_ahead = i + 1 < len(words) and (words[i + 1][0] - w[1]) > max_gap
+        if ends_sentence or too_long or pause_ahead:
             flush()
     flush()
     return segments

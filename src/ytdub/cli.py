@@ -38,6 +38,10 @@ def dub(
     lipsync: bool = typer.Option(
         False, "--lipsync", help="Re-render the mouth to match the dub (Wav2Lip; see README)."
     ),
+    subtitles: bool = typer.Option(
+        False, "--subtitles", help="Burn small, bottom translated subtitles into the video."
+    ),
+    sub_size: int = typer.Option(14, "--sub-size", help="Burned subtitle font size."),
     translator: str = typer.Option(
         "argos", "--translator", help="Translator: 'argos' (offline) or 'nllb'."
     ),
@@ -72,6 +76,8 @@ def dub(
         tts_backend=tts,
         diarize=diarize,
         lipsync=lipsync,
+        burn_subtitles=subtitles,
+        subtitle_font_size=sub_size,
         translator=translator,
         asr_model=asr_model,
         reencode_video=reencode,

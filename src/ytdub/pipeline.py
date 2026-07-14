@@ -169,6 +169,15 @@ def dub(source: str, settings: Settings | None = None) -> DubResult:
     write_srt(segments, srt_path)
     log.success(f"Wrote subtitles: {srt_path.name}")
 
+    # 8b. Optionally burn the subtitles into the video (small, bottom).
+    if settings.burn_subtitles:
+        from ytdub.ffmpeg import burn_subtitles
+
+        subbed = settings.output_dir / f"{dl.video_id}.{target}.subbed.mp4"
+        burn_subtitles(out_path, srt_path, subbed, font_size=settings.subtitle_font_size)
+        log.success(f"Burned subtitles: {subbed.name}")
+        out_path = subbed
+
     log.success(f"Done: {out_path}")
     return DubResult(
         video_id=dl.video_id,

@@ -100,6 +100,11 @@ class Settings(BaseSettings):
     # the mux always adds +faststart so the result plays fine on WhatsApp/Telegram.
     reencode_video: bool = False
 
+    # Burn the translated subtitles into the video (small, bottom). Off by default
+    # (a sidecar .srt is always written either way).
+    burn_subtitles: bool = False
+    subtitle_font_size: int = 14
+
     def compute_type(self) -> str:
         return self.asr_compute_type or default_compute_type(self.device)
 

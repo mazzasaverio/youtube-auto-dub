@@ -92,6 +92,18 @@ def test_build_sentence_segments_splits_on_punctuation():
     assert [s.index for s in segs] == [0, 1]
 
 
+def test_build_sentence_segments_splits_on_pause():
+    from ytdub.stages.transcribe import build_sentence_segments
+
+    # No punctuation, but a 2s silent gap before "Oggi" -> a phrase boundary.
+    words = [
+        (0.0, 0.4, "Ciao"), (0.4, 0.8, " a"), (0.8, 1.0, " tutti"),
+        (3.0, 3.4, "Oggi"), (3.4, 3.8, " bene"),
+    ]
+    segs = build_sentence_segments(words, max_gap=0.6)
+    assert [s.text for s in segs] == ["Ciao a tutti", "Oggi bene"]
+
+
 def test_build_sentence_segments_caps_length():
     from ytdub.stages.transcribe import build_sentence_segments
 

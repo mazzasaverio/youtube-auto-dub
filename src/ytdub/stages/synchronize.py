@@ -29,10 +29,18 @@ from ytdub.models import Segment
 log = stage_logger("sync")
 
 
-def _duration_seconds(path: Path) -> float:
-    from pydub import AudioSegment
+def _trim_silence(seg, silence_thresh_db: float = -40.0):
+    """Strip leading/trailing silence so a clip's speech starts right at its slot.
 
-    return len(AudioSegment.from_file(path)) / 1000.0
+    Loose TTS clips often carry ~100-300 ms of leading silence; trimming it tightens
+    onset alignment with the original video.
+    """
+    from pydub.silence import detect_leading_silence
+
+    lead = detect_leading_silence(seg, silence_threshold=silence_thresh_db)
+    trail = detect_leading_silence(seg.reverse(), silence_threshold=silence_thresh_db)
+    end = len(seg) - trail
+    return seg[lead:end] if end > lead else seg
 
 
 def align(
@@ -64,7 +72,13 @@ def align(
     stretched_total = 0.0
     for seg in voiced:
         window = seg.duration
-        clip_dur = _duration_seconds(seg.audio_path)
+
+        # Trim leading/trailing silence so speech starts exactly at the segment slot.
+        trimmed = _trim_silence(AudioSegment.from_file(seg.audio_path))
+        trimmed_path = work_dir / f"trim_{seg.index:04d}.wav"
+        trimmed.export(trimmed_path, format="wav")
+        clip_dur = len(trimmed) / 1000.0
+
         factor = 1.0
         if window > 0.05 and clip_dur > window:
             # Too long -> speed up, capped.
@@ -75,10 +89,10 @@ def align(
 
         if abs(factor - 1.0) > 1e-3:
             aligned = work_dir / f"aligned_{seg.index:04d}.wav"
-            time_stretch(seg.audio_path, aligned, factor)
+            time_stretch(trimmed_path, aligned, factor)
             stretched_total += 1
         else:
-            aligned = seg.audio_path
+            aligned = trimmed_path
 
         clip = AudioSegment.from_file(aligned)
         timeline = timeline.overlay(clip, position=int(seg.start * 1000))

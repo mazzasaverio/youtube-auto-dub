@@ -71,6 +71,7 @@ and caches them; later runs are offline.
 
 ```bash
 ytdub dub URL --source it --target es          # Italian → Spanish
+ytdub dub URL --subtitles                      # burn small translated captions at the bottom
 ytdub dub URL --diarize                        # multi-voice (one cloned voice per speaker)
 ytdub dub URL --tts openvoice                  # fully-MIT cloning backend
 ytdub dub URL --translator nllb                # higher-quality translation

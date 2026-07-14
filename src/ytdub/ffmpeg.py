@@ -28,6 +28,28 @@ def _run(args: list[str]) -> None:
         raise RuntimeError(f"ffmpeg failed ({' '.join(args[:6])} ...):\n{proc.stderr[-2000:]}")
 
 
+def burn_subtitles(video: Path, srt: Path, out: Path, *, font_size: int = 14) -> Path:
+    """Burn an SRT into the video as small, bottom-centered captions (re-encodes video).
+
+    ``Alignment=2`` is bottom-center in libass; a thin outline keeps text readable over
+    any background. Audio is stream-copied; the result stays ``+faststart``.
+    """
+    ensure_ffmpeg()
+    out.parent.mkdir(parents=True, exist_ok=True)
+    # Escape characters that the ffmpeg filtergraph treats specially in a filename.
+    srt_arg = str(srt).replace("\\", "\\\\").replace(":", "\\:").replace("'", "\\'")
+    style = (
+        f"FontName=DejaVu Sans,FontSize={font_size},"
+        "Alignment=2,MarginV=10,Outline=1,Shadow=0,BorderStyle=1"
+    )
+    _run([
+        "ffmpeg", "-y", "-i", str(video),
+        "-vf", f"subtitles={srt_arg}:force_style='{style}'",
+        "-c:a", "copy", "-movflags", "+faststart", str(out),
+    ])
+    return out
+
+
 def faststart_remux(src: Path, dst: Path) -> Path:
     """Copy streams into a share-ready MP4 (AAC audio + ``+faststart``), no re-encode of video."""
     ensure_ffmpeg()
