@@ -111,8 +111,12 @@ export YTDUB_WAV2LIP_PYTHON=/path/to/Wav2Lip/.venv/bin/python
 ytdub dub URL --target en --lipsync
 ```
 
-Wav2Lip is **slow on CPU** — use a GPU (or the free Colab/Kaggle path above) for
-practical speed.
+Wav2Lip is **slow on CPU** — use a GPU. Two ready Colab notebooks (free T4 GPU):
+- [`examples/colab_lipsync_only.ipynb`](examples/colab_lipsync_only.ipynb) — **recommended**:
+  dub locally, then upload the dubbed MP4 and let Colab do *only* Wav2Lip. Fewest moving
+  parts, no heavy install.
+- [`examples/colab_lipsync.ipynb`](examples/colab_lipsync.ipynb) — the full pipeline +
+  lip-sync on Colab in one go.
 
 ### Multi-voice (multiple speakers)
 
