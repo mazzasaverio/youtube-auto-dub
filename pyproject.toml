@@ -1,0 +1,55 @@
+[project]
+name = "ytdub"
+version = "0.2.0"
+description = "Local-first, fully open-source YouTube dubbing with voice cloning and time-aligned synthesis."
+readme = "README.md"
+requires-python = ">=3.10,<3.13"
+license = { text = "MIT" }
+authors = [{ name = "Saverio Mazza" }]
+
+# Core dependencies: everything needed to run the pipeline locally, for free,
+# on CPU (a GPU is used automatically if present). The heavy TTS engines live in
+# optional extras so the base install stays light and installs everywhere.
+dependencies = [
+    "yt-dlp>=2025.1.15",        # robust YouTube download (replaces pytube/youtube-dl)
+    "faster-whisper>=1.1.0",    # ASR with word-level timestamps (CTranslate2, CPU-friendly)
+    "argostranslate>=1.9.6",    # fully offline MT (default translator, CPU)
+    "pydub>=0.25.1",            # audio segment manipulation
+    "soundfile>=0.12.1",        # wav I/O
+    "numpy>=1.24",
+    "typer>=0.12.0",            # the CLI (`ytdub ...`)
+    "loguru>=0.7.2",
+    "pydantic>=2.6",
+    "pydantic-settings>=2.2",
+    "python-dotenv>=1.0.1",
+]
+
+[project.optional-dependencies]
+# Default cloning TTS: Coqui XTTS-v2 (multilingual, one pip install, CPU-capable).
+xtts = ["coqui-tts>=0.25.0"]
+# Fully-MIT alternative cloning TTS: OpenVoice v2 + MeloTTS.
+# Install notes are in the README (MeloTTS ships from git + `unidic` download).
+openvoice = ["myshell-openvoice", "melotts", "unidic"]
+# Higher-quality neural MT alternative to Argos (heavier, pulls in torch).
+nllb = ["transformers>=4.44", "torch>=2.2", "sentencepiece>=0.2"]
+# Optional FastAPI server (the CLI is the primary entry point).
+api = ["fastapi>=0.115", "uvicorn>=0.30"]
+# Developer tooling.
+dev = ["pytest>=8.0", "ruff>=0.6"]
+
+[project.scripts]
+ytdub = "ytdub.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ytdub"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

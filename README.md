@@ -1,94 +1,129 @@
 # YouTube Auto-Dub
 
-This repository serves as a starting point for developing a FastAPI backend for dubbing YouTube videos by capturing and inferring the voice timbre using OpenVoice.
+Take a YouTube video and get **the same video, dubbed into another language in the
+original speaker's voice** — then share it straight over WhatsApp/Telegram.
 
-![Example Image](static/screen.png)
+Everything runs **locally and for free** on your own machine. No paid APIs, no cloud
+account required. A GPU is used automatically if you have one, but the whole pipeline
+works on a CPU-only laptop.
 
-## Core Features
+> **v0.2 — full rewrite.** The project was rebuilt around the current open-source
+> state of the art (see [What changed](#what-changed-from-v01)). The legacy v0.1
+> FastAPI/OpenVoice-v1 code still lives under `backend/` for reference and will be
+> removed once the new pipeline is battle-tested.
 
-- **Voice Timbre Recognition**: Utilizes OpenVoice technology to accurately recognize the voice timbre from the original YouTube video.
-- **Text-to-Speech Synthesis**: Downloads and processes subtitles, translating them and converting them into speech, matching the original voice timbre as closely as possible.
-- **Flexible Deployment**: Supports deployment via GitHub Actions and Cloud Build, with compatibility for Cloud Run deployment, ensuring scalability and ease of use. Currently, inference is performed using CPU. For setting up Cloud Run with Terraform, refer to the following repository for instructions:
+![Example](static/screen.png)
 
-[FastAPI-CloudRun-Starter](https://github.com/mazzasaverio/fastapi-cloudrun-starter)
+## How it works
 
-## Getting Started
+```
+ URL ──▶ download ──▶ transcribe ──▶ translate ──▶ voice clone ──▶ synchronize ──▶ mux ──▶ dubbed.mp4
+        (yt-dlp)    (faster-whisper)  (Argos/NLLB)   (XTTS-v2 /     (duration        (ffmpeg,
+                     word timings                     OpenVoice v2)  alignment)       WhatsApp-ready)
+```
 
-To get started with YouTube Auto-Dub, follow these steps:
+| Stage | Engine | Why |
+|---|---|---|
+| Download | **yt-dlp** | The only downloader that keeps working as YouTube changes |
+| Transcribe | **faster-whisper** (word timestamps) | Precise per-segment timing — trusts the audio, not YouTube captions |
+| Translate | **Argos Translate** (offline, default) · NLLB-200 (optional) | Free, local, segment-by-segment |
+| Voice clone + TTS | **Coqui XTTS-v2** (default) · **OpenVoice v2** (MIT) | Clones the original voice, speaks the target language |
+| Synchronize | **Duration alignment** (pitch-preserving time-stretch) | Keeps the dub locked to the video — the piece v0.1 lacked |
+| Assemble | **ffmpeg** (H.264 + AAC, `+faststart`) | Share-ready MP4 for messaging apps |
 
-### 1. Environment Setup
+## Quick start
 
-For local development, we recommend setting up a conda environment with:
+Requires **Python 3.10–3.12** and **ffmpeg** on your PATH
+(`sudo apt install ffmpeg` / `brew install ffmpeg`).
 
 ```bash
-conda install mamba -n base -c conda-forge
-mamba create -n youtube-auto-dub python=3.9 -y
-mamba install -n youtube-auto-dub pytorch==1.13.1 torchvision==0.14.1 torchaudio==0.13.1 pytorch-cuda=11.7 -c pytorch -c nvidia -y
-conda activate youtube-auto-dub
-pip install -r requirements.txt
+# 1. Install (uv recommended; plain pip works too). XTTS extra = the cloning voice.
+uv venv && source .venv/bin/activate
+uv pip install -e ".[xtts]"
+
+# 2. Dub a video into English (source language auto-detected).
+ytdub dub "https://youtu.be/VIDEO_ID" --target en
+
+# 3. Grab the result — ready to send on WhatsApp.
+#    data/output/VIDEO_ID.en.mp4
 ```
 
-### 2. Download Required Checkpoints
+That's it. The first run downloads the models it needs (Whisper + XTTS ≈ 2 GB) and
+caches them; later runs are offline.
 
-Download the model checkpoints necessary for voice timbre recognition and synthesis:
+> **"Sign in to confirm you're not a bot"?** YouTube shows this on some networks
+> (datacenters, VPNs, CI — rarely on a home machine). Pass your browser's cookies:
+> `ytdub dub URL --cookies-from-browser chrome` (or `--cookies cookies.txt`).
+
+### Common options
 
 ```bash
-sudo aria2c --console-log-level=error -c -x 16 -s 16 -k 1M https://myshell-public-repo-hosting.s3.amazonaws.com/checkpoints_1226.zip -d /code -o checkpoints_1226.zip
-sudo unzip /code/checkpoints_1226.zip -d backend/checkpoints
+ytdub dub URL --source it --target es          # Italian → Spanish
+ytdub dub URL --tts openvoice                  # fully-MIT cloning backend
+ytdub dub URL --translator nllb                # higher-quality translation
+ytdub dub URL --asr-model medium               # more accurate transcription
+ytdub dub URL --reencode                       # force H.264 for max compatibility
+ytdub info                                     # show version + detected device
 ```
 
-### 3. Running the Application
+## Choosing the engines (all free/open-source)
 
-With the environment set up and checkpoints downloaded, navigate to the backend directory and start the application using:
+**Translation**
+- `argos` *(default)* — fully offline, tiny models, installs the needed language pair
+  on first use. Best for the "works on any PC" promise.
+- `nllb` — Meta NLLB-200; noticeably more fluent, heavier (pulls in torch).
+  `uv pip install -e ".[nllb]"`.
+
+**Voice cloning / TTS**
+- `xtts` *(default)* — Coqui XTTS-v2: one pip install, 17 languages, CPU-capable.
+  License CPML (free to use; commercial use needs registration).
+- `openvoice` — OpenVoice v2 (MeloTTS + tone-color converter), **MIT** end to end.
+  Extra setup:
+  ```bash
+  uv pip install -e ".[openvoice]"
+  python -m unidic download
+  # download the OpenVoice v2 checkpoints, then:
+  export YTDUB_OPENVOICE_CKPT=/path/to/checkpoints_v2
+  ```
+
+## Optional: run it as a server
 
 ```bash
-cd backend
-uvicorn app.main:app --reload
+uv pip install -e ".[api,xtts]"
+uvicorn ytdub.api:app --reload
+# POST /dub {"url": "...", "target_lang": "en"} → GET /status/{id} → GET /download/{id}
 ```
 
-## Usage
+## Configuration
 
-To use YouTube Auto-Dub, begin by submitting a YouTube link via the endpoint:
+Everything is overridable via CLI flags or `YTDUB_*` env vars (or a `.env` file), e.g.
+`YTDUB_TARGET_LANG=es`, `YTDUB_ASR_MODEL=medium`, `YTDUB_MAX_SPEEDUP=1.4`.
 
-```
-/api/v1/download/
-```
+## What changed from v0.1
 
-The application will process the video, recognize the voice timbre, translate the subtitles, synthesize the translated speech matching the original timbre, and then assemble the final video. The processed video will be saved in `backend/data/final_videos`. With the video ID returned in the output, you can check the processing status through the endpoint:
+| v0.1 (2024) | v0.2 (state of the art) |
+|---|---|
+| `pytube` + `youtube-dl` (frequently broken) | `yt-dlp` |
+| YouTube captions only (often missing) | `faster-whisper` transcription with word timings |
+| `googletrans` (unofficial, whole-text blob) | Argos/NLLB, **segment-by-segment** |
+| OpenVoice **v1** (CPU-only, vendored) | XTTS-v2 / OpenVoice **v2**, pluggable, GPU-aware |
+| **No timing** — one audio blob glued on | **Duration alignment** per segment |
+| conda + miniconda Docker, Cloud Run | plain `pip`/`uv`, local-first CLI |
 
-```
-/api/v1/status/{video_id}
-```
+## Roadmap
 
-Finally, you can download the final video by using the endpoint:
+- **Multi-speaker** dubbing: diarization (WhisperX/pyannote) + a cloned voice per
+  speaker (the data model already carries a `speaker` field).
+- Length-aware translation (ask the MT model for a shorter/longer rendering to fit the
+  time window before falling back to time-stretch).
+- Burned-in / sidecar translated subtitles.
 
-```
-/api/v1/download-video/{video_id}
-```
+## Reference & inspiration
 
-inserting the video's ID.
-
-## Deployment
-
-This project is designed with cloud deployment in mind. The provided `cloudbuild.yaml` and Terraform configurations facilitate deployment on Google Cloud Platform, specifically using Cloud Run for scalable, serverless application hosting.
-
-## Contributing
-
-Contributions are welcome! Whether you're fixing a bug, adding new features, or improving the documentation, your help is appreciated. Please feel free to fork the repository and submit pull requests.
-
-## Reference and Inspiration
-
-The development of YouTube Auto-Dub was inspired by the following repository:
-
-- [OpenVoice](https://github.com/myshell-ai/OpenVoice): Instant voice cloning technology by MyShell, utilized for voice timbre recognition and synthesis in this project.
-
-## Future Directions
-
-- **Model Improvements**: Explore and integrate better models for voice recognition and synthesis.
-- **Serverless GPU Support**: Investigate options for serverless GPU computing to accelerate processing.
-- **Frontend Interface**: Develop a user-friendly frontend for easier interaction with the application.
-- **Translation Synchronization**: Enhance the synchronization between translated text and video content for a seamless viewing experience.
+- [OpenVoice](https://github.com/myshell-ai/OpenVoice) · [Coqui XTTS](https://github.com/idiap/coqui-ai-TTS)
+- [faster-whisper](https://github.com/SYSTRAN/faster-whisper) · [yt-dlp](https://github.com/yt-dlp/yt-dlp) · [Argos Translate](https://github.com/argosopentech/argos-translate)
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+MIT — see `LICENSE`. Note the XTTS-v2 model weights ship under Coqui's CPML; use the
+`openvoice` backend for a fully-MIT stack.
