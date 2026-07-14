@@ -1,7 +1,7 @@
-"""End-to-end orchestration: URL in, dubbed MP4 out.
+"""End-to-end orchestration: URL (or local file) in, dubbed MP4 out.
 
-    download -> transcribe -> translate -> build reference -> synthesize
-             -> synchronize -> assemble
+    acquire -> transcribe -> translate -> build reference -> synthesize
+            -> synchronize -> assemble (+ translated .srt)
 
 Every stage is imported lazily inside :func:`dub` so that importing this module (and
 running ``ytdub --help``) never pulls in torch or a TTS engine.
@@ -13,7 +13,7 @@ from pathlib import Path
 
 from ytdub.config import Settings
 from ytdub.logging import stage_logger
-from ytdub.models import DubResult, Segment
+from ytdub.models import DownloadResult, DubResult, Segment
 
 log = stage_logger("pipeline")
 
@@ -54,23 +54,49 @@ def build_reference_clips(
     return clips
 
 
-def dub(url: str, settings: Settings | None = None) -> DubResult:
-    """Run the full dubbing pipeline for a single YouTube URL."""
+def _acquire_local(path: Path, downloads_dir: Path) -> DownloadResult:
+    """Prepare a local video file as a source: extract a 16 kHz mono WAV + probe length.
+
+    This lets the full ML pipeline run on any file already on disk — handy for testing
+    and for videos that aren't on YouTube (or when YouTube's bot-check blocks download).
+    """
+    from ytdub.ffmpeg import extract_audio, probe_duration
+
+    video_id = path.stem
+    audio = downloads_dir / f"{video_id}.wav"
+    log.info(f"Using local file: {path.name}")
+    extract_audio(path, audio)
+    return DownloadResult(
+        video_id=video_id,
+        title=path.name,
+        video_path=path,
+        audio_path=audio,
+        duration=probe_duration(path),
+    )
+
+
+def dub(source: str, settings: Settings | None = None) -> DubResult:
+    """Run the full dubbing pipeline for a YouTube URL *or* a local video file path."""
     settings = settings or Settings()
 
     from ytdub.stages import assemble, download, synchronize, transcribe
     from ytdub.stages.translate import get_translator, translate_segments
     from ytdub.stages.tts import get_tts, synthesize_segments
+    from ytdub.subtitles import write_srt
 
     log.info(f"Device={settings.device} | translator={settings.translator} | tts={settings.tts_backend}")
 
-    # 1. Download video + normalized audio.
-    dl = download.download(
-        url,
-        settings.downloads_dir,
-        cookies_from_browser=settings.cookies_from_browser,
-        cookies_file=settings.cookies_file,
-    )
+    # 1. Acquire the source: local file if it exists, otherwise download via yt-dlp.
+    local = Path(source)
+    if local.exists() and local.is_file():
+        dl = _acquire_local(local, settings.downloads_dir)
+    else:
+        dl = download.download(
+            source,
+            settings.downloads_dir,
+            cookies_from_browser=settings.cookies_from_browser,
+            cookies_file=settings.cookies_file,
+        )
     work = settings.work_dir / dl.video_id
     work.mkdir(parents=True, exist_ok=True)
 
@@ -129,6 +155,11 @@ def dub(url: str, settings: Settings | None = None) -> DubResult:
         dl.video_path, dubbed_audio, out_path, reencode_video=settings.reencode_video
     )
 
+    # 8. Translated subtitles sidecar (handy for review and sharing).
+    srt_path = settings.output_dir / f"{dl.video_id}.{target}.srt"
+    write_srt(segments, srt_path)
+    log.success(f"Wrote subtitles: {srt_path.name}")
+
     log.success(f"Done: {out_path}")
     return DubResult(
         video_id=dl.video_id,
@@ -136,4 +167,5 @@ def dub(url: str, settings: Settings | None = None) -> DubResult:
         segments=segments,
         source_lang=source_lang,
         target_lang=target,
+        subtitle_path=srt_path,
     )

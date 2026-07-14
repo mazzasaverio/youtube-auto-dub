@@ -111,3 +111,21 @@ def test_align_raises_without_audio(tmp_path):
             total_duration=1.0,
             work_dir=tmp_path / "w",
         )
+
+
+def test_srt_timestamp_and_write(tmp_path):
+    from ytdub.subtitles import _timestamp, write_srt
+
+    assert _timestamp(0) == "00:00:00,000"
+    assert _timestamp(3661.5) == "01:01:01,500"
+
+    segments = [
+        Segment(index=0, start=0.0, end=1.5, text="ciao", translated="hi"),
+        Segment(index=1, start=2.0, end=3.25, text="mondo", translated="world"),
+    ]
+    out = write_srt(segments, tmp_path / "s.srt")
+    content = out.read_text(encoding="utf-8")
+    # Uses the translation, not the source text, and standard SRT arrow formatting.
+    assert "hi" in content and "world" in content and "ciao" not in content
+    assert "00:00:00,000 --> 00:00:01,500" in content
+    assert content.startswith("1\n")

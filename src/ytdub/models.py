@@ -56,3 +56,4 @@ class DubResult:
     segments: list[Segment] = field(default_factory=list)
     source_lang: str = ""
     target_lang: str = ""
+    subtitle_path: Path | None = None

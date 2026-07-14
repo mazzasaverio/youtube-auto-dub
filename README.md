@@ -45,7 +45,14 @@ uv pip install -e ".[xtts]"
 ytdub dub "https://youtu.be/VIDEO_ID" --target en
 
 # 3. Grab the result — ready to send on WhatsApp.
-#    data/output/VIDEO_ID.en.mp4
+#    data/output/VIDEO_ID.en.mp4   (+ VIDEO_ID.en.srt translated subtitles)
+```
+
+Already have the video on disk? Pass a **local file path** instead of a URL — the same
+pipeline runs without touching YouTube (great for testing or non-YouTube videos):
+
+```bash
+ytdub dub ./my_video.mp4 --target en
 ```
 
 That's it. The first run downloads the models it needs (Whisper + XTTS ≈ 2 GB) and

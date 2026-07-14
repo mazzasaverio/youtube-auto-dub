@@ -28,6 +28,33 @@ def _run(args: list[str]) -> None:
         raise RuntimeError(f"ffmpeg failed ({' '.join(args[:6])} ...):\n{proc.stderr[-2000:]}")
 
 
+def probe_duration(path: Path) -> float:
+    """Return media duration in seconds via ffprobe (0.0 if unknown)."""
+    exe = shutil.which("ffprobe")
+    if not exe:
+        raise RuntimeError("ffprobe not found (it ships with ffmpeg). Install ffmpeg.")
+    proc = subprocess.run(
+        [exe, "-v", "error", "-show_entries", "format=duration",
+         "-of", "default=nokey=1:noprint_wrappers=1", str(path)],
+        capture_output=True, text=True,
+    )
+    try:
+        return float(proc.stdout.strip())
+    except ValueError:
+        return 0.0
+
+
+def extract_audio(src: Path, dst: Path, sample_rate: int = 16000) -> Path:
+    """Extract a mono WAV at ``sample_rate`` from any media file (for ASR/cloning)."""
+    ensure_ffmpeg()
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    _run([
+        "ffmpeg", "-y", "-i", str(src),
+        "-vn", "-ar", str(sample_rate), "-ac", "1", str(dst),
+    ])
+    return dst
+
+
 def _atempo_chain(factor: float) -> list[str]:
     """ffmpeg's atempo filter only accepts 0.5–2.0; chain factors for larger changes.
 

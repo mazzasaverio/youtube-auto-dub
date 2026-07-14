@@ -22,7 +22,9 @@ app = typer.Typer(add_completion=False, help="Local-first open-source YouTube du
 
 @app.command()
 def dub(
-    url: str = typer.Argument(..., help="YouTube URL (watch, shorts or youtu.be)."),
+    url: str = typer.Argument(
+        ..., help="YouTube URL (watch/shorts/youtu.be) or a path to a local video file."
+    ),
     target: str = typer.Option("en", "--target", "-t", help="Target language (ISO-639-1)."),
     source: str | None = typer.Option(
         None, "--source", "-s", help="Source language; omit to auto-detect."
@@ -72,6 +74,8 @@ def dub(
     )
     result = run_dub(url, settings)
     typer.secho(f"\n✅ Dubbed video: {result.output_path}", fg=typer.colors.GREEN, bold=True)
+    if result.subtitle_path:
+        typer.secho(f"   Subtitles:    {result.subtitle_path}", fg=typer.colors.GREEN)
 
 
 @app.command()
