@@ -8,9 +8,8 @@ account required. A GPU is used automatically if you have one, but the whole pip
 works on a CPU-only laptop.
 
 > **v0.2 — full rewrite.** The project was rebuilt around the current open-source
-> state of the art (see [What changed](#what-changed-from-v01)). The legacy v0.1
-> FastAPI/OpenVoice-v1 code still lives under `backend/` for reference and will be
-> removed once the new pipeline is battle-tested.
+> state of the art (see [What changed](#what-changed-from-v01)). The old v0.1
+> Cloud Run / OpenVoice-v1 backend was removed; its code remains in git history.
 
 ![Example](static/screen.png)
 
@@ -105,6 +104,14 @@ ytdub dub URL --diarize
   # download the OpenVoice v2 checkpoints, then:
   export YTDUB_OPENVOICE_CKPT=/path/to/checkpoints_v2
   ```
+
+## Optional: run in Docker
+
+```bash
+docker build -t ytdub .
+docker run --rm -v "$PWD/data:/app/data" ytdub dub "https://youtu.be/VIDEO_ID" -t en
+# add `--gpus all` on a CUDA host for acceleration
+```
 
 ## Optional: run it as a server
 

@@ -1,20 +1,19 @@
-# Ignore data and checkpoints directories
-backend/data/
-backend/checkpoints/
-data
-checkpoints
+# Runtime artifacts and models (downloaded on first run)
+data/
+checkpoints/
 
-# Ignore Git and version control
+# Local envs / caches
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Version control / CI
 .git
 .gitignore
+.github
 
-# Ignore other unnecessary files
-*.pyc
-*.pyo
-*.pyd
-__pycache__
-*.swp
-.DS_Store
-
-# Ignore specific files or other directories as needed
-# e.g., local environment files, IDE-specific files,
+# Docs/assets not needed in the image
+static/
