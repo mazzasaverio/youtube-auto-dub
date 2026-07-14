@@ -113,10 +113,20 @@ def dub(source: str, settings: Settings | None = None) -> DubResult:
 
     # 2b. Optional diarization -> tag each segment with a speaker (multi-voice).
     if settings.diarize:
-        from ytdub.stages.diarize import assign_speakers, diarize as run_diarize
+        if settings.diarize_method == "pyannote":
+            from ytdub.stages.diarize import assign_speakers, diarize as run_diarize
 
-        turns = run_diarize(dl.audio_path, device=settings.device, hf_token=settings.hf_token)
-        segments = assign_speakers(segments, turns)
+            turns = run_diarize(
+                dl.audio_path, device=settings.device, hf_token=settings.hf_token
+            )
+            segments = assign_speakers(segments, turns)
+        else:
+            from ytdub.stages.diarize import assign_speakers_by_embedding
+
+            segments = assign_speakers_by_embedding(
+                dl.audio_path, segments,
+                num_speakers=settings.num_speakers, device=settings.device,
+            )
         n = len({s.speaker for s in segments})
         log.success(f"Diarization: {n} distinct voice(s) will be cloned")
 

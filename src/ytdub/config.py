@@ -81,9 +81,13 @@ class Settings(BaseSettings):
     tts_backend: str = "chatterbox"  # "chatterbox" (MIT, default) | "xtts" | "openvoice"
 
     # --- Diarization (multi-voice) ---------------------------------------
-    # When True, detect speakers and clone one voice per speaker. Needs the
-    # [diarize] extra and a Hugging Face token (env HF_TOKEN).
+    # When True, detect speakers and clone one voice per speaker.
+    #   method "embedding" (default): token-free (Resemblyzer + clustering).
+    #   method "pyannote": more accurate, needs the [diarize] extra + HF token.
+    # num_speakers 0 = auto-estimate.
     diarize: bool = False
+    diarize_method: str = "embedding"
+    num_speakers: int = 0
     hf_token: str | None = None
 
     # --- Synchronization --------------------------------------------------

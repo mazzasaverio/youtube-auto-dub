@@ -114,6 +114,29 @@ def test_build_sentence_segments_caps_length():
     assert all(s.duration <= 6.0 for s in segs)
 
 
+def test_cluster_embeddings_two_speakers():
+    from ytdub.stages.diarize import cluster_embeddings
+
+    # Two tight groups in embedding space.
+    embs = [
+        [1.0, 0.0, 0.0], [0.95, 0.05, 0.0], [0.9, 0.1, 0.0],   # speaker A
+        [0.0, 1.0, 0.0], [0.05, 0.95, 0.0], [0.0, 0.9, 0.1],   # speaker B
+    ]
+    labels = cluster_embeddings(embs, num_speakers=2)
+    # First three share a label, last three share the other.
+    assert labels[0] == labels[1] == labels[2]
+    assert labels[3] == labels[4] == labels[5]
+    assert labels[0] != labels[3]
+
+
+def test_cluster_embeddings_auto_estimates():
+    from ytdub.stages.diarize import cluster_embeddings
+
+    embs = [[1.0, 0.0], [0.99, 0.01], [0.0, 1.0], [0.01, 0.99]]
+    labels = cluster_embeddings(embs, num_speakers=0, threshold=0.75)
+    assert len(set(labels)) == 2
+
+
 def test_assign_speakers_by_overlap():
     from ytdub.stages.diarize import SpeakerTurn, assign_speakers
 

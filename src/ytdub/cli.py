@@ -33,7 +33,14 @@ def dub(
         "chatterbox", "--tts", help="TTS backend: 'chatterbox' (MIT, default), 'xtts' or 'openvoice'."
     ),
     diarize: bool = typer.Option(
-        False, "--diarize", help="Detect speakers and clone one voice each (needs HF_TOKEN)."
+        False, "--diarize", help="Multi-voice: detect speakers and clone one voice each."
+    ),
+    speakers: int = typer.Option(
+        0, "--speakers", help="Number of speakers for --diarize (0 = auto-estimate)."
+    ),
+    diarize_method: str = typer.Option(
+        "embedding", "--diarize-method",
+        help="'embedding' (token-free, default) or 'pyannote' (needs HF_TOKEN).",
     ),
     lipsync: bool = typer.Option(
         False, "--lipsync", help="Re-render the mouth to match the dub (Wav2Lip; see README)."
@@ -80,6 +87,8 @@ def dub(
         target_lang=target,
         tts_backend=tts,
         diarize=diarize,
+        diarize_method=diarize_method,
+        num_speakers=speakers,
         lipsync=lipsync,
         burn_subtitles=subtitles,
         subtitle_font_size=sub_size,
