@@ -15,8 +15,6 @@ works on a CPU-only laptop.
 > state of the art (see [What changed](#what-changed-from-v01)). The old v0.1
 > Cloud Run / OpenVoice-v1 backend was removed; its code remains in git history.
 
-![Example](static/screen.png)
-
 **Verified end-to-end on CPU (no GPU):** a self-test that generates an Italian clip,
 dubs it to English and measures the result gives **0.00 s** timing drift (dub length ==
 source length) and **0.888** speaker-timbre cosine similarity (>0.85 ≈ same voice).
@@ -24,10 +22,15 @@ Reproduce it with `python examples/selftest_dub.py` (needs the `[xtts]` extra).
 
 ## How it works
 
-```
- URL ──▶ download ──▶ transcribe ──▶ translate ──▶ voice clone ──▶ synchronize ──▶ mux ──▶ dubbed.mp4
-        (yt-dlp)    (faster-whisper)  (Argos/NLLB)   (Chatterbox /   (duration       (ffmpeg,
-                     word timings     segment-wise    XTTS-v2)        alignment)      WhatsApp-ready)
+```mermaid
+flowchart LR
+    A["URL / local file"] --> B["download<br/>yt-dlp"]
+    B --> C["transcribe<br/>faster-whisper"]
+    C --> D["translate<br/>Argos / NLLB"]
+    D --> E["voice clone<br/>Chatterbox / XTTS"]
+    E --> F["synchronize<br/>duration align"]
+    F --> G["mux<br/>ffmpeg"]
+    G --> H["dubbed.mp4<br/>WhatsApp-ready"]
 ```
 
 | Stage | Engine | Why |
