@@ -26,8 +26,8 @@ Reproduce it with `python examples/selftest_dub.py` (needs the `[xtts]` extra).
 
 ```
  URL ──▶ download ──▶ transcribe ──▶ translate ──▶ voice clone ──▶ synchronize ──▶ mux ──▶ dubbed.mp4
-        (yt-dlp)    (faster-whisper)  (Argos/NLLB)   (XTTS-v2 /     (duration        (ffmpeg,
-                     word timings                     OpenVoice v2)  alignment)       WhatsApp-ready)
+        (yt-dlp)    (faster-whisper)  (Argos/NLLB)   (Chatterbox /   (duration       (ffmpeg,
+                     word timings     segment-wise    XTTS-v2)        alignment)      WhatsApp-ready)
 ```
 
 | Stage | Engine | Why |
@@ -76,10 +76,10 @@ and caches them; later runs are offline.
 ```bash
 ytdub dub URL --source it --target es          # Italian → Spanish
 ytdub dub URL --subtitles                      # burn small translated captions at the bottom
-ytdub dub URL --diarize                        # multi-voice (one cloned voice per speaker)
-ytdub dub URL --tts openvoice                  # fully-MIT cloning backend
+ytdub dub URL --diarize --speakers 2           # multi-voice (one cloned voice per speaker)
 ytdub dub URL --translator nllb                # higher-quality translation
 ytdub dub URL --asr-model medium               # more accurate transcription
+ytdub dub URL --tts xtts                       # faster TTS backend on CPU
 ytdub dub URL --reencode                       # force H.264 for max compatibility
 ytdub info                                     # show version + detected device
 ```
@@ -89,7 +89,7 @@ ytdub info                                     # show version + detected device
 For the most fluent result, use a bigger ASR model and the neural translator:
 
 ```bash
-uv pip install -e ".[xtts,nllb]"
+uv pip install -e ".[chatterbox,nllb]"
 ytdub dub URL --asr-model medium --translator nllb
 ```
 
@@ -156,14 +156,16 @@ clips (Shorts, a few minutes) are fine; long videos take a while. To keep CPU sn
 
 ```bash
 ytdub dub URL --asr-model base      # smaller Whisper (tiny/base) = faster ASR
-ytdub dub URL --tts openvoice       # lighter on CPU than XTTS
-# keep --translator argos (default); avoid --nllb and --diarize on CPU
+ytdub dub URL --tts xtts            # XTTS is faster than the Chatterbox default on CPU
+# keep --translator argos (default); nllb and --diarize add work on CPU
 ```
 
 **Want a GPU without owning one — for free?** Run it on **Google Colab** or **Kaggle**
-(free T4 GPU): create a notebook, `!pip install "ytdub[xtts] @ git+<repo>"`, then call
-`ytdub dub ...` in a cell. Same tool, ~real-time. Ask and I'll drop in a ready-to-run
-Colab notebook.
+(free T4 GPU):
+`!pip install "ytdub[chatterbox,nllb] @ git+https://github.com/mazzasaverio/youtube-auto-dub.git"`,
+then call `ytdub dub ...` in a cell. The ready-made
+[`examples/colab_lipsync.ipynb`](examples/colab_lipsync.ipynb) does the whole pipeline
+(and lip-sync) on Colab for you.
 
 ## Choosing the engines (all free/open-source)
 
@@ -214,7 +216,7 @@ docker run --rm -v "$PWD/data:/app/data" ytdub dub "https://youtu.be/VIDEO_ID" -
 ## Optional: run it as a server
 
 ```bash
-uv pip install -e ".[api,xtts]"
+uv pip install -e ".[api,chatterbox]"
 uvicorn ytdub.api:app --reload
 # POST /dub {"url": "...", "target_lang": "en"} → GET /status/{id} → GET /download/{id}
 ```
@@ -230,8 +232,9 @@ Everything is overridable via CLI flags or `YTDUB_*` env vars (or a `.env` file)
 |---|---|
 | `pytube` + `youtube-dl` (frequently broken) | `yt-dlp` |
 | YouTube captions only (often missing) | `faster-whisper` transcription with word timings |
-| `googletrans` (unofficial, whole-text blob) | Argos/NLLB, **segment-by-segment** |
-| OpenVoice **v1** (CPU-only, vendored) | XTTS-v2 / OpenVoice **v2**, pluggable, GPU-aware |
+| `googletrans` (unofficial, whole-text blob) | Argos/NLLB, **sentence-by-sentence**, length-aware |
+| OpenVoice **v1** (CPU-only, vendored) | **Chatterbox** (MIT) / XTTS-v2, pluggable, GPU-aware |
+| single voice | **multi-voice** — token-free speaker diarization |
 | **No timing** — one audio blob glued on | **Duration alignment** per segment |
 | conda + miniconda Docker, Cloud Run | plain `pip`/`uv`, local-first CLI |
 
@@ -245,11 +248,24 @@ Everything is overridable via CLI flags or `YTDUB_*` env vars (or a `.env` file)
 
 ## Reference & inspiration
 
-- [OpenVoice](https://github.com/myshell-ai/OpenVoice) · [Coqui XTTS](https://github.com/idiap/coqui-ai-TTS)
-- [faster-whisper](https://github.com/SYSTRAN/faster-whisper) · [yt-dlp](https://github.com/yt-dlp/yt-dlp) · [Argos Translate](https://github.com/argosopentech/argos-translate)
+- [Chatterbox](https://github.com/resemble-ai/chatterbox) · [Coqui XTTS](https://github.com/idiap/coqui-ai-TTS) · [OpenVoice](https://github.com/myshell-ai/OpenVoice)
+- [faster-whisper](https://github.com/SYSTRAN/faster-whisper) · [yt-dlp](https://github.com/yt-dlp/yt-dlp) · [Argos Translate](https://github.com/argosopentech/argos-translate) · [NLLB](https://github.com/facebookresearch/fairseq/tree/nllb) · [Wav2Lip](https://github.com/Rudrabha/Wav2Lip)
 
 ## License
 
-MIT — see `LICENSE`. The default Chatterbox backend is MIT too. The alternative XTTS-v2
-weights ship under Coqui's CPML (non-commercial without registration), so stick with
-Chatterbox for a fully-MIT stack.
+The **code** is **MIT** — see [`LICENSE`](LICENSE). Do anything you want with it.
+
+The models it *orchestrates* have their own licenses, so mind them for **commercial**
+use. The default stack is fully permissive; some optional engines are not:
+
+| Engine | License | Commercial use |
+|---|---|---|
+| Chatterbox (default TTS) | MIT | ✅ |
+| faster-whisper / Whisper | MIT | ✅ |
+| Argos Translate (default) | MIT + open model data | ✅ |
+| yt-dlp, ffmpeg | Unlicense / LGPL-GPL | ✅ (respect ffmpeg build flags) |
+| **NLLB-200** (`--translator nllb`) | **CC-BY-NC 4.0** | ❌ non-commercial |
+| **XTTS-v2** (`--tts xtts`) | **Coqui CPML** | ⚠️ needs registration |
+
+**Bottom line:** the default backends (Argos + Chatterbox + Whisper) are safe for
+commercial dubbing; if you switch to `nllb` or `xtts`, check their terms.
