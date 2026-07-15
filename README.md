@@ -1,8 +1,14 @@
-# YouTube Auto-Dub
+<p align="center">
+  <img src="assets/banner.svg" alt="YouTube Auto-Dub" width="100%">
+</p>
 
-[![CI](https://github.com/mazzasaverio/youtube-auto-dub/actions/workflows/ci.yml/badge.svg)](https://github.com/mazzasaverio/youtube-auto-dub/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Python 3.10–3.12](https://img.shields.io/badge/python-3.10--3.12-blue.svg)](pyproject.toml)
+<p align="center">
+  <a href="https://github.com/mazzasaverio/youtube-auto-dub/actions/workflows/ci.yml"><img src="https://github.com/mazzasaverio/youtube-auto-dub/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+  <a href="pyproject.toml"><img src="https://img.shields.io/badge/python-3.10--3.12-blue.svg" alt="Python 3.10–3.12"></a>
+</p>
+
+# YouTube Auto-Dub
 
 Take a YouTube video and get **the same video, dubbed into another language in the
 original speaker's voice** — then share it straight over WhatsApp/Telegram.
