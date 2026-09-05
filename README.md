@@ -179,60 +179,65 @@ ytdub dub URL --tts xtts            # XTTS è più veloce del Chatterbox predefi
 # mantieni --translator argos (predefinito); nllb e --diarize aumentano il lavoro su CPU
 ```
 
-**Want a GPU without owning one — for free?** Run it on **Google Colab** or **Kaggle**
-(free T4 GPU):
+**Vuoi una GPU gratuita senza possederne una?** Esegui il progetto su **Google Colab**
+o **Kaggle**, che offrono una GPU T4 gratuita:
 `!pip install "ytdub[chatterbox,nllb] @ git+https://github.com/mazzasaverio/youtube-auto-dub.git"`,
-then call `ytdub dub ...` in a cell. The ready-made
-[`examples/colab_lipsync.ipynb`](examples/colab_lipsync.ipynb) does the whole pipeline
-(and lip-sync) on Colab for you.
+poi richiama `ytdub dub ...` in una cella. Il notebook pronto
+[`examples/colab_lipsync.ipynb`](examples/colab_lipsync.ipynb) esegue per te l'intera
+pipeline, inclusa la sincronizzazione labiale, su Colab.
 
-## Choosing the engines (all free/open-source)
+## Scegliere i motori (tutti gratuiti e open source)
 
-**Translation**
-- `argos` *(default)* — fully offline, tiny models, installs the needed language pair
-  on first use. Best for the "works on any PC" promise.
-- `nllb` — Meta NLLB-200; noticeably more fluent, heavier (pulls in torch).
+**Traduzione**
+- `argos` *(predefinito)*: completamente offline, con modelli piccoli; installa la coppia
+  linguistica necessaria al primo utilizzo. È la scelta migliore per la promessa di
+  funzionare su qualunque PC.
+- `nllb`: Meta NLLB-200, sensibilmente più fluido ma più pesante perché include torch.
   `uv pip install -e ".[nllb]"`.
 
-**Voice cloning / TTS**
-- `chatterbox` *(default)* — Chatterbox Multilingual (Resemble AI): **MIT**, clean
-  `pip install`, 23 languages, emotion control. On our real test short it improved
-  speaker-timbre similarity to the original voice from **0.784 (XTTS) to 0.834** — at the
-  cost of being slower on CPU. `uv pip install -e ".[chatterbox]"`.
-- `xtts` — Coqui XTTS-v2: 17 languages, CPU-capable and faster than Chatterbox.
-  License CPML (free to use; commercial use needs registration). `--tts xtts`.
+**Clonazione vocale / TTS**
+- `chatterbox` *(predefinito)*: Chatterbox Multilingual di Resemble AI, con licenza
+  **MIT**, installazione `pip` pulita, 23 lingue e controllo dell'emozione. In un test
+  reale su uno Short, ha portato la similarità del timbro del relatore con la voce
+  originale da **0,784 con XTTS a 0,834**, ma è più lento su CPU.
+  `uv pip install -e ".[chatterbox]"`.
+- `xtts`: Coqui XTTS-v2, con 17 lingue, utilizzabile su CPU e più veloce di Chatterbox.
+  Licenza CPML, utilizzabile gratuitamente ma con registrazione per l'uso commerciale.
+  `--tts xtts`.
 
-  **CPU install recipe (verified July 2026, Python 3.11).** coqui-tts is picky about
-  its deps; this combination works out of the box on a CPU-only machine:
+  **Procedura di installazione su CPU, verificata a luglio 2026 con Python 3.11.**
+  coqui-tts è selettivo sulle dipendenze; questa combinazione funziona direttamente
+  su una macchina con sola CPU:
   ```bash
   uv venv --python 3.11 && source .venv/bin/activate
   uv pip install torch==2.6.0 torchaudio==2.6.0 \
-      --index-url https://download.pytorch.org/whl/cpu   # torch < 2.9 avoids torchcodec
-  uv pip install -e ".[xtts]"                            # pins transformers<5, numpy<2.1
+      --index-url https://download.pytorch.org/whl/cpu   # torch < 2.9 evita torchcodec
+  uv pip install -e ".[xtts]"                            # vincola transformers<5, numpy<2.1
   ```
-  On a CUDA machine, drop the `--index-url` line (use default torch) — torchcodec works
-  there. The `[xtts]` extra encodes the transformers/numpy pins so you don't hit them.
-- `openvoice` — OpenVoice v2 (MeloTTS + tone-color converter), MIT. **No pip extra**:
-  `myshell-openvoice` hard-pins ancient deps (`faster-whisper==0.9.0`, old `av`/`librosa`)
-  that don't resolve against a modern stack, so it only works in a **dedicated legacy
-  environment** you set up by hand. Prefer `chatterbox`/`xtts`. If you really need it:
+  Su una macchina CUDA, ometti la riga `--index-url` e usa torch predefinito, perché
+  torchcodec vi funziona. L'extra `[xtts]` codifica i vincoli su transformers e numpy.
+- `openvoice`: OpenVoice v2 (MeloTTS + convertitore del colore tonale), MIT. **Nessun
+  extra pip**: `myshell-openvoice` impone dipendenze molto vecchie
+  (`faster-whisper==0.9.0`, versioni precedenti di `av` e `librosa`) che non si risolvono
+  con uno stack moderno. Funziona quindi soltanto in un **ambiente legacy dedicato**,
+  configurato manualmente. Preferisci `chatterbox` o `xtts`. Se ne hai davvero bisogno:
   ```bash
-  # in a separate venv, not the main one
+  # in un venv separato, non in quello principale
   pip install --no-deps myshell-openvoice && pip install wavmark "setuptools<80"
   pip install git+https://github.com/myshell-ai/MeloTTS.git && python -m unidic download
-  # download the OpenVoice v2 checkpoints, then:
+  # scarica i checkpoint di OpenVoice v2, poi:
   export YTDUB_OPENVOICE_CKPT=/path/to/checkpoints_v2
   ```
 
-## Optional: run in Docker
+## Facoltativo: esecuzione in Docker
 
 ```bash
 docker build -t ytdub .
 docker run --rm -v "$PWD/data:/app/data" ytdub dub "https://youtu.be/VIDEO_ID" -t en
-# add `--gpus all` on a CUDA host for acceleration
+# aggiungi `--gpus all` su un host CUDA per l'accelerazione
 ```
 
-## Optional: run it as a server
+## Facoltativo: esecuzione come server
 
 ```bash
 uv pip install -e ".[api,chatterbox]"
@@ -240,51 +245,55 @@ uvicorn ytdub.api:app --reload
 # POST /dub {"url": "...", "target_lang": "en"} → GET /status/{id} → GET /download/{id}
 ```
 
-## Configuration
+## Configurazione
 
-Everything is overridable via CLI flags or `YTDUB_*` env vars (or a `.env` file), e.g.
+Ogni impostazione può essere sovrascritta con flag della CLI, variabili d'ambiente
+`YTDUB_*` o un file `.env`, per esempio
 `YTDUB_TARGET_LANG=es`, `YTDUB_ASR_MODEL=medium`, `YTDUB_MAX_SPEEDUP=1.4`.
 
-## What changed from v0.1
+## Cosa cambia rispetto alla v0.1
 
-| v0.1 (2024) | v0.2 (state of the art) |
+| v0.1 (2024) | v0.2 (stato dell'arte) |
 |---|---|
-| `pytube` + `youtube-dl` (frequently broken) | `yt-dlp` |
-| YouTube captions only (often missing) | `faster-whisper` transcription with word timings |
-| `googletrans` (unofficial, whole-text blob) | Argos/NLLB, **sentence-by-sentence**, length-aware |
-| OpenVoice **v1** (CPU-only, vendored) | **Chatterbox** (MIT) / XTTS-v2, pluggable, GPU-aware |
-| single voice | **multi-voice** — token-free speaker diarization |
-| **No timing** — one audio blob glued on | **Duration alignment** per segment |
-| conda + miniconda Docker, Cloud Run | plain `pip`/`uv`, local-first CLI |
+| `pytube` + `youtube-dl` (spesso non funzionanti) | `yt-dlp` |
+| Solo sottotitoli YouTube (spesso assenti) | Trascrizione `faster-whisper` con timestamp delle parole |
+| `googletrans` (non ufficiale, blocco di testo intero) | Argos/NLLB, **frase per frase** e sensibile alla lunghezza |
+| OpenVoice **v1** (solo CPU, incluso nel repository) | **Chatterbox** (MIT) / XTTS-v2, sostituibili e consapevoli della GPU |
+| Voce singola | **Più voci**, diarizzazione dei relatori senza token |
+| **Nessuna temporizzazione**, un unico blocco audio incollato | **Allineamento della durata** per segmento |
+| conda + Docker miniconda, Cloud Run | CLI `pip`/`uv` semplice, in locale prima di tutto |
 
 ## Roadmap
 
-- Length-aware translation (ask the MT model for a shorter/longer rendering to fit the
-  time window before falling back to time-stretch).
-- Reduce tail hallucinations (constrain MT on very short trailing fragments).
-- Overlap-aware placement so tightly-packed multi-speaker turns don't collide.
-- Package Wav2Lip setup into a one-command helper.
+- Traduzione sensibile alla lunghezza: chiedere al modello MT una formulazione più corta
+  o più lunga per entrare nella finestra temporale prima di ricorrere al time-stretch.
+- Ridurre le allucinazioni finali, vincolando il modello MT sui frammenti conclusivi molto brevi.
+- Posizionamento consapevole delle sovrapposizioni, così gli interventi ravvicinati di più
+  relatori non collidono.
+- Racchiudere la configurazione di Wav2Lip in un aiuto eseguibile con un solo comando.
 
-## Reference & inspiration
+## Riferimenti e ispirazione
 
 - [Chatterbox](https://github.com/resemble-ai/chatterbox) · [Coqui XTTS](https://github.com/idiap/coqui-ai-TTS) · [OpenVoice](https://github.com/myshell-ai/OpenVoice)
 - [faster-whisper](https://github.com/SYSTRAN/faster-whisper) · [yt-dlp](https://github.com/yt-dlp/yt-dlp) · [Argos Translate](https://github.com/argosopentech/argos-translate) · [NLLB](https://github.com/facebookresearch/fairseq/tree/nllb) · [Wav2Lip](https://github.com/Rudrabha/Wav2Lip)
 
-## License
+## Licenza
 
-The **code** is **MIT** — see [`LICENSE`](LICENSE). Do anything you want with it.
+Il **codice** è distribuito con licenza **MIT**, vedi [`LICENSE`](LICENSE). Puoi usarlo
+come preferisci.
 
-The models it *orchestrates* have their own licenses, so mind them for **commercial**
-use. The default stack is fully permissive; some optional engines are not:
+I modelli che il progetto *orchestra* hanno licenze proprie, da considerare per l'uso
+**commerciale**. Lo stack predefinito è pienamente permissivo, alcuni motori facoltativi
+non lo sono:
 
-| Engine | License | Commercial use |
+| Motore | Licenza | Uso commerciale |
 |---|---|---|
 | Chatterbox (default TTS) | MIT | ✅ |
 | faster-whisper / Whisper | MIT | ✅ |
 | Argos Translate (default) | MIT + open model data | ✅ |
-| yt-dlp, ffmpeg | Unlicense / LGPL-GPL | ✅ (respect ffmpeg build flags) |
-| **NLLB-200** (`--translator nllb`) | **CC-BY-NC 4.0** | ❌ non-commercial |
-| **XTTS-v2** (`--tts xtts`) | **Coqui CPML** | ⚠️ needs registration |
+| yt-dlp, ffmpeg | Unlicense / LGPL-GPL | ✅ (rispetta i flag di compilazione di ffmpeg) |
+| **NLLB-200** (`--translator nllb`) | **CC-BY-NC 4.0** | ❌ non commerciale |
+| **XTTS-v2** (`--tts xtts`) | **Coqui CPML** | ⚠️ richiede registrazione |
 
-**Bottom line:** the default backends (Argos + Chatterbox + Whisper) are safe for
-commercial dubbing; if you switch to `nllb` or `xtts`, check their terms.
+**Conclusione:** i backend predefiniti (Argos + Chatterbox + Whisper) sono adatti al
+doppiaggio commerciale. Se passi a `nllb` o `xtts`, verifica i rispettivi termini.
