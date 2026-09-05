@@ -10,23 +10,25 @@
 
 # YouTube Auto-Dub
 
-Take a YouTube video and get **the same video, dubbed into another language in the
-original speaker's voice** — then share it straight over WhatsApp/Telegram.
+Prendi un video YouTube e ottieni **lo stesso video, doppiato in un'altra lingua con
+la voce del relatore originale**, pronto da condividere su WhatsApp o Telegram.
 
-Everything runs **locally and for free** on your own machine. No paid APIs, no cloud
-account required. A GPU is used automatically if you have one, but the whole pipeline
-works on a CPU-only laptop.
+Tutto funziona **in locale e gratuitamente** sul tuo computer. Non servono API a
+pagamento né un account cloud. Se disponibile, la GPU viene usata automaticamente,
+ma l'intera pipeline funziona anche su un portatile con sola CPU.
 
-> **v0.2 — full rewrite.** The project was rebuilt around the current open-source
-> state of the art (see [What changed](#what-changed-from-v01)). The old v0.1
-> Cloud Run / OpenVoice-v1 backend was removed; its code remains in git history.
+> **v0.2, riscrittura completa.** Il progetto è stato ricostruito attorno allo stato
+> dell'arte open source (vedi [Cosa cambia rispetto alla v0.1](#cosa-cambia-rispetto-alla-v01)).
+> Il vecchio backend v0.1 basato su Cloud Run / OpenVoice-v1 è stato rimosso, ma il
+> suo codice resta nella cronologia Git.
 
-**Verified end-to-end on CPU (no GPU):** a self-test that generates an Italian clip,
-dubs it to English and measures the result gives **0.00 s** timing drift (dub length ==
-source length) and **0.888** speaker-timbre cosine similarity (>0.85 ≈ same voice).
-Reproduce it with `python examples/selftest_dub.py` (needs the `[xtts]` extra).
+**Verificato end-to-end su CPU, senza GPU:** un test che genera una clip italiana, la
+doppia in inglese e ne misura il risultato rileva uno scarto temporale di **0,00 s**
+(durata del doppiaggio == durata della sorgente) e una similarità coseno del timbro
+vocale di **0,888** (>0,85 indica approssimativamente la stessa voce). Per ripeterlo:
+`python examples/selftest_dub.py` (richiede l'extra `[xtts]`).
 
-## How it works
+## Come funziona
 
 ```mermaid
 flowchart LR
@@ -39,78 +41,81 @@ flowchart LR
     G --> H["dubbed.mp4<br/>WhatsApp-ready"]
 ```
 
-| Stage | Engine | Why |
+| Fase | Motore | Motivo |
 |---|---|---|
-| Download | **yt-dlp** | The only downloader that keeps working as YouTube changes |
-| Transcribe | **faster-whisper** (word timestamps) | Precise per-segment timing — trusts the audio, not YouTube captions |
-| Translate | **Argos Translate** (offline, default) · NLLB-200 (optional) | Free, local, segment-by-segment |
-| Voice clone + TTS | **Chatterbox** (MIT, default) · XTTS-v2 · OpenVoice v2 | Clones the original voice, speaks the target language |
-| Synchronize | **Duration alignment** (pitch-preserving time-stretch) | Keeps the dub locked to the video — the piece v0.1 lacked |
-| Assemble | **ffmpeg** (H.264 + AAC, `+faststart`) | Share-ready MP4 for messaging apps |
+| Download | **yt-dlp** | Il downloader che continua a funzionare mentre YouTube cambia |
+| Trascrizione | **faster-whisper** (timestamp delle parole) | Temporizzazione precisa per segmento, basata sull'audio e non sui sottotitoli YouTube |
+| Traduzione | **Argos Translate** (offline, predefinito) · NLLB-200 (facoltativo) | Gratuita, locale e segmento per segmento |
+| Clonazione vocale + TTS | **Chatterbox** (MIT, predefinito) · XTTS-v2 · OpenVoice v2 | Clona la voce originale e parla nella lingua di destinazione |
+| Sincronizzazione | **Allineamento della durata** (time-stretch che preserva l'intonazione) | Mantiene il doppiaggio allineato al video, la parte che mancava nella v0.1 |
+| Assemblaggio | **ffmpeg** (H.264 + AAC, `+faststart`) | MP4 pronto da condividere nelle app di messaggistica |
 
-## Quick start
+## Avvio rapido
 
-Requires **Python 3.10–3.12** and **ffmpeg** on your PATH
+Richiede **Python 3.10–3.12** e **ffmpeg** nel tuo `PATH`
 (`sudo apt install ffmpeg` / `brew install ffmpeg`).
 
 ```bash
-# 1. Install (uv recommended; plain pip works too). The cloning voice is Chatterbox
-#    (MIT). For the highest-quality translation add ,nllb (see "Best quality").
+# 1. Installa (consigliato uv, funziona anche pip). La voce da clonare è Chatterbox
+#    (MIT). Per la traduzione di maggiore qualità aggiungi ,nllb (vedi "Qualità migliore").
 uv venv && source .venv/bin/activate
 uv pip install -e ".[chatterbox]"
 
-# 2. Dub a video into English (source language auto-detected).
+# 2. Doppi un video in inglese (la lingua sorgente viene rilevata automaticamente).
 ytdub dub "https://youtu.be/VIDEO_ID" --target en
 
-# 3. Grab the result — ready to send on WhatsApp.
-#    data/output/VIDEO_ID.en.mp4   (+ VIDEO_ID.en.srt translated subtitles)
+# 3. Recupera il risultato, pronto da inviare su WhatsApp.
+#    data/output/VIDEO_ID.en.mp4   (+ sottotitoli tradotti VIDEO_ID.en.srt)
 ```
 
-Already have the video on disk? Pass a **local file path** instead of a URL — the same
-pipeline runs without touching YouTube (great for testing or non-YouTube videos):
+Hai già il video sul disco? Passa un **percorso a un file locale** anziché un URL: la
+stessa pipeline funziona senza contattare YouTube, utile per testare o per video che
+non provengono da YouTube.
 
 ```bash
 ytdub dub ./my_video.mp4 --target en
 ```
 
-That's it. The first run downloads the models it needs (Whisper + Chatterbox ≈ 2 GB)
-and caches them; later runs are offline.
+È tutto. La prima esecuzione scarica e memorizza in cache i modelli necessari
+(Whisper + Chatterbox, circa 2 GB); le esecuzioni successive sono offline.
 
-> **"Sign in to confirm you're not a bot"?** YouTube shows this on some networks
-> (datacenters, VPNs, CI — rarely on a home machine). Pass your browser's cookies:
-> `ytdub dub URL --cookies-from-browser chrome` (or `--cookies cookies.txt`).
+> **"Sign in to confirm you're not a bot"?** YouTube può mostrarlo su alcune reti,
+> come datacenter, VPN o CI, raramente su una rete domestica. Passa i cookie del browser:
+> `ytdub dub URL --cookies-from-browser chrome` (oppure `--cookies cookies.txt`).
 
-### Common options
+### Opzioni comuni
 
 ```bash
-ytdub dub URL --source it --target es          # Italian → Spanish
-ytdub dub URL --subtitles                      # burn small translated captions at the bottom
-ytdub dub URL --diarize --speakers 2           # multi-voice (one cloned voice per speaker)
-ytdub dub URL --translator nllb                # higher-quality translation
-ytdub dub URL --asr-model medium               # more accurate transcription
-ytdub dub URL --tts xtts                       # faster TTS backend on CPU
-ytdub dub URL --reencode                       # force H.264 for max compatibility
-ytdub info                                     # show version + detected device
+ytdub dub URL --source it --target es          # italiano → spagnolo
+ytdub dub URL --subtitles                      # integra in basso piccoli sottotitoli tradotti
+ytdub dub URL --diarize --speakers 2           # più voci, una clonata per relatore
+ytdub dub URL --translator nllb                # traduzione di qualità superiore
+ytdub dub URL --asr-model medium               # trascrizione più accurata
+ytdub dub URL --tts xtts                       # backend TTS più veloce su CPU
+ytdub dub URL --reencode                       # forza H.264 per la massima compatibilità
+ytdub info                                     # mostra la versione e il dispositivo rilevato
 ```
 
-### Best quality
+### Qualità migliore
 
-For the most fluent result, use a bigger ASR model and the neural translator:
+Per un risultato più fluido, usa un modello ASR più grande e il traduttore neurale:
 
 ```bash
 uv pip install -e ".[chatterbox,nllb]"
 ytdub dub URL --asr-model medium --translator nllb
 ```
 
-Transcription is rebuilt on **sentence boundaries** (from word timestamps), which gives
-cleaner translations and more natural timing — on a real 32 s clip this cut the segments
-that needed time-stretching from 6/6 down to 1/4.
+La trascrizione viene ricostruita sui **confini delle frasi**, a partire dai timestamp
+delle parole. Questo produce traduzioni più pulite e una temporizzazione più naturale:
+su una clip reale di 32 secondi, i segmenti che richiedevano time-stretching sono passati
+da 6 su 6 a 1 su 4.
 
-**Rhythm control (`--target-cps`).** NLLB translation is *length-aware*: each segment gets
-a character budget from its time window, and the model's most concise fitting rendering is
-chosen so the dub is sped up less. Lower `--target-cps` (default 15) for more concise
-translations (looser rhythm), higher for more faithful ones. On a fast English → Italian
-clip this cut over-compressed segments from ~86% to ~56%.
+**Controllo del ritmo (`--target-cps`).** La traduzione NLLB tiene conto della lunghezza:
+ogni segmento riceve un budget di caratteri dalla sua finestra temporale e viene scelta
+la formulazione più concisa che vi rientra, così il doppiaggio richiede meno accelerazione.
+Riduci `--target-cps` (predefinito 15) per traduzioni più concise e un ritmo più libero,
+aumentalo per traduzioni più fedeli. Su una clip rapida dall'inglese all'italiano ha ridotto
+i segmenti eccessivamente compressi da circa l'86% al 56%.
 
 ### Lip-sync (experimental, open-source)
 
