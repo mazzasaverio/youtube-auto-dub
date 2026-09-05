@@ -10,25 +10,23 @@
 
 # YouTube Auto-Dub
 
-Prendi un video YouTube e ottieni **lo stesso video, doppiato in un'altra lingua con
-la voce del relatore originale**, pronto da condividere su WhatsApp o Telegram.
+Take a YouTube video and get **the same video, dubbed into another language in the
+original speaker's voice** — then share it straight over WhatsApp/Telegram.
 
-Tutto funziona **in locale e gratuitamente** sul tuo computer. Non servono API a
-pagamento né un account cloud. Se disponibile, la GPU viene usata automaticamente,
-ma l'intera pipeline funziona anche su un portatile con sola CPU.
+Everything runs **locally and for free** on your own machine. No paid APIs, no cloud
+account required. A GPU is used automatically if you have one, but the whole pipeline
+works on a CPU-only laptop.
 
-> **v0.2, riscrittura completa.** Il progetto è stato ricostruito attorno allo stato
-> dell'arte open source (vedi [Cosa cambia rispetto alla v0.1](#cosa-cambia-rispetto-alla-v01)).
-> Il vecchio backend v0.1 basato su Cloud Run / OpenVoice-v1 è stato rimosso, ma il
-> suo codice resta nella cronologia Git.
+> **v0.2 — full rewrite.** The project was rebuilt around the current open-source
+> state of the art (see [What changed](#what-changed-from-v01)). The old v0.1
+> Cloud Run / OpenVoice-v1 backend was removed; its code remains in git history.
 
-**Verificato end-to-end su CPU, senza GPU:** un test che genera una clip italiana, la
-doppia in inglese e ne misura il risultato rileva uno scarto temporale di **0,00 s**
-(durata del doppiaggio == durata della sorgente) e una similarità coseno del timbro
-vocale di **0,888** (>0,85 indica approssimativamente la stessa voce). Per ripeterlo:
-`python examples/selftest_dub.py` (richiede l'extra `[xtts]`).
+**Verified end-to-end on CPU (no GPU):** a self-test that generates an Italian clip,
+dubs it to English and measures the result gives **0.00 s** timing drift (dub length ==
+source length) and **0.888** speaker-timbre cosine similarity (>0.85 ≈ same voice).
+Reproduce it with `python examples/selftest_dub.py` (needs the `[xtts]` extra).
 
-## Come funziona
+## How it works
 
 ```mermaid
 flowchart LR
@@ -41,203 +39,190 @@ flowchart LR
     G --> H["dubbed.mp4<br/>WhatsApp-ready"]
 ```
 
-| Fase | Motore | Motivo |
+| Stage | Engine | Why |
 |---|---|---|
-| Download | **yt-dlp** | Il downloader che continua a funzionare mentre YouTube cambia |
-| Trascrizione | **faster-whisper** (timestamp delle parole) | Temporizzazione precisa per segmento, basata sull'audio e non sui sottotitoli YouTube |
-| Traduzione | **Argos Translate** (offline, predefinito) · NLLB-200 (facoltativo) | Gratuita, locale e segmento per segmento |
-| Clonazione vocale + TTS | **Chatterbox** (MIT, predefinito) · XTTS-v2 · OpenVoice v2 | Clona la voce originale e parla nella lingua di destinazione |
-| Sincronizzazione | **Allineamento della durata** (time-stretch che preserva l'intonazione) | Mantiene il doppiaggio allineato al video, la parte che mancava nella v0.1 |
-| Assemblaggio | **ffmpeg** (H.264 + AAC, `+faststart`) | MP4 pronto da condividere nelle app di messaggistica |
+| Download | **yt-dlp** | The only downloader that keeps working as YouTube changes |
+| Transcribe | **faster-whisper** (word timestamps) | Precise per-segment timing — trusts the audio, not YouTube captions |
+| Translate | **Argos Translate** (offline, default) · NLLB-200 (optional) | Free, local, segment-by-segment |
+| Voice clone + TTS | **Chatterbox** (MIT, default) · XTTS-v2 · OpenVoice v2 | Clones the original voice, speaks the target language |
+| Synchronize | **Duration alignment** (pitch-preserving time-stretch) | Keeps the dub locked to the video — the piece v0.1 lacked |
+| Assemble | **ffmpeg** (H.264 + AAC, `+faststart`) | Share-ready MP4 for messaging apps |
 
-## Avvio rapido
+## Quick start
 
-Richiede **Python 3.10–3.12** e **ffmpeg** nel tuo `PATH`
+Requires **Python 3.10–3.12** and **ffmpeg** on your PATH
 (`sudo apt install ffmpeg` / `brew install ffmpeg`).
 
 ```bash
-# 1. Installa (consigliato uv, funziona anche pip). La voce da clonare è Chatterbox
-#    (MIT). Per la traduzione di maggiore qualità aggiungi ,nllb (vedi "Qualità migliore").
+# 1. Install (uv recommended; plain pip works too). The cloning voice is Chatterbox
+#    (MIT). For the highest-quality translation add ,nllb (see "Best quality").
 uv venv && source .venv/bin/activate
 uv pip install -e ".[chatterbox]"
 
-# 2. Doppi un video in inglese (la lingua sorgente viene rilevata automaticamente).
+# 2. Dub a video into English (source language auto-detected).
 ytdub dub "https://youtu.be/VIDEO_ID" --target en
 
-# 3. Recupera il risultato, pronto da inviare su WhatsApp.
-#    data/output/VIDEO_ID.en.mp4   (+ sottotitoli tradotti VIDEO_ID.en.srt)
+# 3. Grab the result — ready to send on WhatsApp.
+#    data/output/VIDEO_ID.en.mp4   (+ VIDEO_ID.en.srt translated subtitles)
 ```
 
-Hai già il video sul disco? Passa un **percorso a un file locale** anziché un URL: la
-stessa pipeline funziona senza contattare YouTube, utile per testare o per video che
-non provengono da YouTube.
+Already have the video on disk? Pass a **local file path** instead of a URL — the same
+pipeline runs without touching YouTube (great for testing or non-YouTube videos):
 
 ```bash
 ytdub dub ./my_video.mp4 --target en
 ```
 
-È tutto. La prima esecuzione scarica e memorizza in cache i modelli necessari
-(Whisper + Chatterbox, circa 2 GB); le esecuzioni successive sono offline.
+That's it. The first run downloads the models it needs (Whisper + Chatterbox ≈ 2 GB)
+and caches them; later runs are offline.
 
-> **"Sign in to confirm you're not a bot"?** YouTube può mostrarlo su alcune reti,
-> come datacenter, VPN o CI, raramente su una rete domestica. Passa i cookie del browser:
-> `ytdub dub URL --cookies-from-browser chrome` (oppure `--cookies cookies.txt`).
+> **"Sign in to confirm you're not a bot"?** YouTube shows this on some networks
+> (datacenters, VPNs, CI — rarely on a home machine). Pass your browser's cookies:
+> `ytdub dub URL --cookies-from-browser chrome` (or `--cookies cookies.txt`).
 
-### Opzioni comuni
+### Common options
 
 ```bash
-ytdub dub URL --source it --target es          # italiano → spagnolo
-ytdub dub URL --subtitles                      # integra in basso piccoli sottotitoli tradotti
-ytdub dub URL --diarize --speakers 2           # più voci, una clonata per relatore
-ytdub dub URL --translator nllb                # traduzione di qualità superiore
-ytdub dub URL --asr-model medium               # trascrizione più accurata
-ytdub dub URL --tts xtts                       # backend TTS più veloce su CPU
-ytdub dub URL --reencode                       # forza H.264 per la massima compatibilità
-ytdub info                                     # mostra la versione e il dispositivo rilevato
+ytdub dub URL --source it --target es          # Italian → Spanish
+ytdub dub URL --subtitles                      # burn small translated captions at the bottom
+ytdub dub URL --diarize --speakers 2           # multi-voice (one cloned voice per speaker)
+ytdub dub URL --translator nllb                # higher-quality translation
+ytdub dub URL --asr-model medium               # more accurate transcription
+ytdub dub URL --tts xtts                       # faster TTS backend on CPU
+ytdub dub URL --reencode                       # force H.264 for max compatibility
+ytdub info                                     # show version + detected device
 ```
 
-### Qualità migliore
+### Best quality
 
-Per un risultato più fluido, usa un modello ASR più grande e il traduttore neurale:
+For the most fluent result, use a bigger ASR model and the neural translator:
 
 ```bash
 uv pip install -e ".[chatterbox,nllb]"
 ytdub dub URL --asr-model medium --translator nllb
 ```
 
-La trascrizione viene ricostruita sui **confini delle frasi**, a partire dai timestamp
-delle parole. Questo produce traduzioni più pulite e una temporizzazione più naturale:
-su una clip reale di 32 secondi, i segmenti che richiedevano time-stretching sono passati
-da 6 su 6 a 1 su 4.
+Transcription is rebuilt on **sentence boundaries** (from word timestamps), which gives
+cleaner translations and more natural timing — on a real 32 s clip this cut the segments
+that needed time-stretching from 6/6 down to 1/4.
 
-**Controllo del ritmo (`--target-cps`).** La traduzione NLLB tiene conto della lunghezza:
-ogni segmento riceve un budget di caratteri dalla sua finestra temporale e viene scelta
-la formulazione più concisa che vi rientra, così il doppiaggio richiede meno accelerazione.
-Riduci `--target-cps` (predefinito 15) per traduzioni più concise e un ritmo più libero,
-aumentalo per traduzioni più fedeli. Su una clip rapida dall'inglese all'italiano ha ridotto
-i segmenti eccessivamente compressi da circa l'86% al 56%.
+**Rhythm control (`--target-cps`).** NLLB translation is *length-aware*: each segment gets
+a character budget from its time window, and the model's most concise fitting rendering is
+chosen so the dub is sped up less. Lower `--target-cps` (default 15) for more concise
+translations (looser rhythm), higher for more faithful ones. On a fast English → Italian
+clip this cut over-compressed segments from ~86% to ~56%.
 
-### Sincronizzazione labiale (sperimentale, open source)
+### Lip-sync (experimental, open-source)
 
-Fai coincidere il movimento della bocca sullo schermo con il doppiaggio usando
-**Wav2Lip**. Viene eseguito nel suo *ambiente* dedicato, perché il suo vincolo su
-`librosa` è incompatibile con coqui-tts, ed è avviato tramite sottoprocesso:
+Make the on-screen mouth match the dub using **Wav2Lip**. It runs in its *own*
+environment (its `librosa` pin conflicts with coqui-tts), driven via subprocess:
 
 ```bash
-# configurazione una tantum, in una cartella separata
+# one-time setup, in a separate folder
 git clone https://github.com/Rudrabha/Wav2Lip && cd Wav2Lip
 python -m venv .venv && . .venv/bin/activate && pip install -r requirements.txt
-# scarica il checkpoint wav2lip_gan.pth in Wav2Lip/checkpoints/ (vedi il loro README)
+# download the wav2lip_gan.pth checkpoint into Wav2Lip/checkpoints/ (see their README)
 
-# poi indica quel percorso a ytdub e abilita --lipsync
+# then point ytdub at it and enable --lipsync
 export YTDUB_WAV2LIP_DIR=/path/to/Wav2Lip
 export YTDUB_WAV2LIP_CKPT=/path/to/Wav2Lip/checkpoints/wav2lip_gan.pth
 export YTDUB_WAV2LIP_PYTHON=/path/to/Wav2Lip/.venv/bin/python
 ytdub dub URL --target en --lipsync
 ```
 
-Wav2Lip è **lento su CPU**, quindi usa una GPU. Sono disponibili due notebook Colab
-pronti all'uso, con GPU T4 gratuita:
-- [`examples/colab_lipsync_only.ipynb`](examples/colab_lipsync_only.ipynb), **consigliato**:
-  esegui il doppiaggio in locale, carica poi l'MP4 doppiato e lascia che Colab esegua
-  soltanto Wav2Lip. È il percorso con meno componenti e senza installazioni pesanti.
-- [`examples/colab_lipsync.ipynb`](examples/colab_lipsync.ipynb): l'intera pipeline,
-  inclusa la sincronizzazione labiale, su Colab in un solo passaggio.
+Wav2Lip is **slow on CPU** — use a GPU. Two ready Colab notebooks (free T4 GPU):
+- [`examples/colab_lipsync_only.ipynb`](examples/colab_lipsync_only.ipynb) — **recommended**:
+  dub locally, then upload the dubbed MP4 and let Colab do *only* Wav2Lip. Fewest moving
+  parts, no heavy install.
+- [`examples/colab_lipsync.ipynb`](examples/colab_lipsync.ipynb) — the full pipeline +
+  lip-sync on Colab in one go.
 
-### Più voci (più relatori)
+### Multi-voice (multiple speakers)
 
-Per impostazione predefinita, l'intero video viene doppiato con una sola voce clonata.
-`--diarize` rileva ogni relatore e clona una voce *separata* per ciascuno. Sono disponibili
-due backend:
+By default the whole video is dubbed in one cloned voice. `--diarize` detects each
+speaker and clones a *separate* voice per speaker. Two backends:
 
 ```bash
-# Senza token (predefinito): clustering degli embedding vocali, senza modelli protetti né token HF.
+# Token-free (default): speaker-embedding clustering — no gated models, no HF token.
 uv pip install -e ".[chatterbox,diarize]"
-ytdub dub URL --diarize --speakers 2        # oppure --speakers 0 per la stima automatica
+ytdub dub URL --diarize --speakers 2        # or --speakers 0 to auto-estimate
 
-# Maggiore accuratezza: pyannote richiede un token HF gratuito e l'accettazione una tantum dei termini.
+# Higher accuracy: pyannote (needs a free HF token + one-time terms acceptance).
 uv pip install -e ".[chatterbox,diarize-pyannote]"
-export HF_TOKEN=hf_xxx                        # dopo aver accettato i termini su
+export HF_TOKEN=hf_xxx                        # after accepting terms at
                                               # hf.co/pyannote/speaker-diarization-3.1
 ytdub dub URL --diarize --diarize-method pyannote
 ```
 
-## Senza GPU? Funziona comunque
+## No GPU? It still works
 
-La pipeline rileva automaticamente l'hardware: senza GPU funziona semplicemente su
-**CPU**, senza alcuna configurazione. Download, trascrizione con faster-whisper `int8`,
-traduzione con Argos, sincronizzazione e multiplexing funzionano bene su un normale
-portatile.
+The pipeline auto-detects your hardware: with no GPU it simply runs on **CPU** — nothing
+to configure. Download, transcription (faster-whisper `int8`), translation (Argos),
+synchronization and muxing are all comfortable on a plain laptop.
 
-La parte lenta su CPU è la **clonazione vocale neurale (TTS)**. In generale, clip brevi,
-come gli Shorts o pochi minuti di video, non creano problemi, mentre i video lunghi
-richiedono tempo. Per mantenere rapida l'esecuzione su CPU:
+The one slow part on CPU is the neural **voice cloning (TTS)**. Rule of thumb: short
+clips (Shorts, a few minutes) are fine; long videos take a while. To keep CPU snappy:
 
 ```bash
-ytdub dub URL --asr-model base      # Whisper più piccolo (tiny/base) = ASR più veloce
-ytdub dub URL --tts xtts            # XTTS è più veloce del Chatterbox predefinito su CPU
-# mantieni --translator argos (predefinito); nllb e --diarize aumentano il lavoro su CPU
+ytdub dub URL --asr-model base      # smaller Whisper (tiny/base) = faster ASR
+ytdub dub URL --tts xtts            # XTTS is faster than the Chatterbox default on CPU
+# keep --translator argos (default); nllb and --diarize add work on CPU
 ```
 
-**Vuoi una GPU gratuita senza possederne una?** Esegui il progetto su **Google Colab**
-o **Kaggle**, che offrono una GPU T4 gratuita:
+**Want a GPU without owning one — for free?** Run it on **Google Colab** or **Kaggle**
+(free T4 GPU):
 `!pip install "ytdub[chatterbox,nllb] @ git+https://github.com/mazzasaverio/youtube-auto-dub.git"`,
-poi richiama `ytdub dub ...` in una cella. Il notebook pronto
-[`examples/colab_lipsync.ipynb`](examples/colab_lipsync.ipynb) esegue per te l'intera
-pipeline, inclusa la sincronizzazione labiale, su Colab.
+then call `ytdub dub ...` in a cell. The ready-made
+[`examples/colab_lipsync.ipynb`](examples/colab_lipsync.ipynb) does the whole pipeline
+(and lip-sync) on Colab for you.
 
-## Scegliere i motori (tutti gratuiti e open source)
+## Choosing the engines (all free/open-source)
 
-**Traduzione**
-- `argos` *(predefinito)*: completamente offline, con modelli piccoli; installa la coppia
-  linguistica necessaria al primo utilizzo. È la scelta migliore per la promessa di
-  funzionare su qualunque PC.
-- `nllb`: Meta NLLB-200, sensibilmente più fluido ma più pesante perché include torch.
+**Translation**
+- `argos` *(default)* — fully offline, tiny models, installs the needed language pair
+  on first use. Best for the "works on any PC" promise.
+- `nllb` — Meta NLLB-200; noticeably more fluent, heavier (pulls in torch).
   `uv pip install -e ".[nllb]"`.
 
-**Clonazione vocale / TTS**
-- `chatterbox` *(predefinito)*: Chatterbox Multilingual di Resemble AI, con licenza
-  **MIT**, installazione `pip` pulita, 23 lingue e controllo dell'emozione. In un test
-  reale su uno Short, ha portato la similarità del timbro del relatore con la voce
-  originale da **0,784 con XTTS a 0,834**, ma è più lento su CPU.
-  `uv pip install -e ".[chatterbox]"`.
-- `xtts`: Coqui XTTS-v2, con 17 lingue, utilizzabile su CPU e più veloce di Chatterbox.
-  Licenza CPML, utilizzabile gratuitamente ma con registrazione per l'uso commerciale.
-  `--tts xtts`.
+**Voice cloning / TTS**
+- `chatterbox` *(default)* — Chatterbox Multilingual (Resemble AI): **MIT**, clean
+  `pip install`, 23 languages, emotion control. On our real test short it improved
+  speaker-timbre similarity to the original voice from **0.784 (XTTS) to 0.834** — at the
+  cost of being slower on CPU. `uv pip install -e ".[chatterbox]"`.
+- `xtts` — Coqui XTTS-v2: 17 languages, CPU-capable and faster than Chatterbox.
+  License CPML (free to use; commercial use needs registration). `--tts xtts`.
 
-  **Procedura di installazione su CPU, verificata a luglio 2026 con Python 3.11.**
-  coqui-tts è selettivo sulle dipendenze; questa combinazione funziona direttamente
-  su una macchina con sola CPU:
+  **CPU install recipe (verified July 2026, Python 3.11).** coqui-tts is picky about
+  its deps; this combination works out of the box on a CPU-only machine:
   ```bash
   uv venv --python 3.11 && source .venv/bin/activate
   uv pip install torch==2.6.0 torchaudio==2.6.0 \
-      --index-url https://download.pytorch.org/whl/cpu   # torch < 2.9 evita torchcodec
-  uv pip install -e ".[xtts]"                            # vincola transformers<5, numpy<2.1
+      --index-url https://download.pytorch.org/whl/cpu   # torch < 2.9 avoids torchcodec
+  uv pip install -e ".[xtts]"                            # pins transformers<5, numpy<2.1
   ```
-  Su una macchina CUDA, ometti la riga `--index-url` e usa torch predefinito, perché
-  torchcodec vi funziona. L'extra `[xtts]` codifica i vincoli su transformers e numpy.
-- `openvoice`: OpenVoice v2 (MeloTTS + convertitore del colore tonale), MIT. **Nessun
-  extra pip**: `myshell-openvoice` impone dipendenze molto vecchie
-  (`faster-whisper==0.9.0`, versioni precedenti di `av` e `librosa`) che non si risolvono
-  con uno stack moderno. Funziona quindi soltanto in un **ambiente legacy dedicato**,
-  configurato manualmente. Preferisci `chatterbox` o `xtts`. Se ne hai davvero bisogno:
+  On a CUDA machine, drop the `--index-url` line (use default torch) — torchcodec works
+  there. The `[xtts]` extra encodes the transformers/numpy pins so you don't hit them.
+- `openvoice` — OpenVoice v2 (MeloTTS + tone-color converter), MIT. **No pip extra**:
+  `myshell-openvoice` hard-pins ancient deps (`faster-whisper==0.9.0`, old `av`/`librosa`)
+  that don't resolve against a modern stack, so it only works in a **dedicated legacy
+  environment** you set up by hand. Prefer `chatterbox`/`xtts`. If you really need it:
   ```bash
-  # in un venv separato, non in quello principale
+  # in a separate venv, not the main one
   pip install --no-deps myshell-openvoice && pip install wavmark "setuptools<80"
   pip install git+https://github.com/myshell-ai/MeloTTS.git && python -m unidic download
-  # scarica i checkpoint di OpenVoice v2, poi:
+  # download the OpenVoice v2 checkpoints, then:
   export YTDUB_OPENVOICE_CKPT=/path/to/checkpoints_v2
   ```
 
-## Facoltativo: esecuzione in Docker
+## Optional: run in Docker
 
 ```bash
 docker build -t ytdub .
 docker run --rm -v "$PWD/data:/app/data" ytdub dub "https://youtu.be/VIDEO_ID" -t en
-# aggiungi `--gpus all` su un host CUDA per l'accelerazione
+# add `--gpus all` on a CUDA host for acceleration
 ```
 
-## Facoltativo: esecuzione come server
+## Optional: run it as a server
 
 ```bash
 uv pip install -e ".[api,chatterbox]"
@@ -245,55 +230,51 @@ uvicorn ytdub.api:app --reload
 # POST /dub {"url": "...", "target_lang": "en"} → GET /status/{id} → GET /download/{id}
 ```
 
-## Configurazione
+## Configuration
 
-Ogni impostazione può essere sovrascritta con flag della CLI, variabili d'ambiente
-`YTDUB_*` o un file `.env`, per esempio
+Everything is overridable via CLI flags or `YTDUB_*` env vars (or a `.env` file), e.g.
 `YTDUB_TARGET_LANG=es`, `YTDUB_ASR_MODEL=medium`, `YTDUB_MAX_SPEEDUP=1.4`.
 
-## Cosa cambia rispetto alla v0.1
+## What changed from v0.1
 
-| v0.1 (2024) | v0.2 (stato dell'arte) |
+| v0.1 (2024) | v0.2 (state of the art) |
 |---|---|
-| `pytube` + `youtube-dl` (spesso non funzionanti) | `yt-dlp` |
-| Solo sottotitoli YouTube (spesso assenti) | Trascrizione `faster-whisper` con timestamp delle parole |
-| `googletrans` (non ufficiale, blocco di testo intero) | Argos/NLLB, **frase per frase** e sensibile alla lunghezza |
-| OpenVoice **v1** (solo CPU, incluso nel repository) | **Chatterbox** (MIT) / XTTS-v2, sostituibili e consapevoli della GPU |
-| Voce singola | **Più voci**, diarizzazione dei relatori senza token |
-| **Nessuna temporizzazione**, un unico blocco audio incollato | **Allineamento della durata** per segmento |
-| conda + Docker miniconda, Cloud Run | CLI `pip`/`uv` semplice, in locale prima di tutto |
+| `pytube` + `youtube-dl` (frequently broken) | `yt-dlp` |
+| YouTube captions only (often missing) | `faster-whisper` transcription with word timings |
+| `googletrans` (unofficial, whole-text blob) | Argos/NLLB, **sentence-by-sentence**, length-aware |
+| OpenVoice **v1** (CPU-only, vendored) | **Chatterbox** (MIT) / XTTS-v2, pluggable, GPU-aware |
+| single voice | **multi-voice** — token-free speaker diarization |
+| **No timing** — one audio blob glued on | **Duration alignment** per segment |
+| conda + miniconda Docker, Cloud Run | plain `pip`/`uv`, local-first CLI |
 
 ## Roadmap
 
-- Traduzione sensibile alla lunghezza: chiedere al modello MT una formulazione più corta
-  o più lunga per entrare nella finestra temporale prima di ricorrere al time-stretch.
-- Ridurre le allucinazioni finali, vincolando il modello MT sui frammenti conclusivi molto brevi.
-- Posizionamento consapevole delle sovrapposizioni, così gli interventi ravvicinati di più
-  relatori non collidono.
-- Racchiudere la configurazione di Wav2Lip in un aiuto eseguibile con un solo comando.
+- Length-aware translation (ask the MT model for a shorter/longer rendering to fit the
+  time window before falling back to time-stretch).
+- Reduce tail hallucinations (constrain MT on very short trailing fragments).
+- Overlap-aware placement so tightly-packed multi-speaker turns don't collide.
+- Package Wav2Lip setup into a one-command helper.
 
-## Riferimenti e ispirazione
+## Reference & inspiration
 
 - [Chatterbox](https://github.com/resemble-ai/chatterbox) · [Coqui XTTS](https://github.com/idiap/coqui-ai-TTS) · [OpenVoice](https://github.com/myshell-ai/OpenVoice)
 - [faster-whisper](https://github.com/SYSTRAN/faster-whisper) · [yt-dlp](https://github.com/yt-dlp/yt-dlp) · [Argos Translate](https://github.com/argosopentech/argos-translate) · [NLLB](https://github.com/facebookresearch/fairseq/tree/nllb) · [Wav2Lip](https://github.com/Rudrabha/Wav2Lip)
 
-## Licenza
+## License
 
-Il **codice** è distribuito con licenza **MIT**, vedi [`LICENSE`](LICENSE). Puoi usarlo
-come preferisci.
+The **code** is **MIT** — see [`LICENSE`](LICENSE). Do anything you want with it.
 
-I modelli che il progetto *orchestra* hanno licenze proprie, da considerare per l'uso
-**commerciale**. Lo stack predefinito è pienamente permissivo, alcuni motori facoltativi
-non lo sono:
+The models it *orchestrates* have their own licenses, so mind them for **commercial**
+use. The default stack is fully permissive; some optional engines are not:
 
-| Motore | Licenza | Uso commerciale |
+| Engine | License | Commercial use |
 |---|---|---|
 | Chatterbox (default TTS) | MIT | ✅ |
 | faster-whisper / Whisper | MIT | ✅ |
 | Argos Translate (default) | MIT + open model data | ✅ |
-| yt-dlp, ffmpeg | Unlicense / LGPL-GPL | ✅ (rispetta i flag di compilazione di ffmpeg) |
-| **NLLB-200** (`--translator nllb`) | **CC-BY-NC 4.0** | ❌ non commerciale |
-| **XTTS-v2** (`--tts xtts`) | **Coqui CPML** | ⚠️ richiede registrazione |
+| yt-dlp, ffmpeg | Unlicense / LGPL-GPL | ✅ (respect ffmpeg build flags) |
+| **NLLB-200** (`--translator nllb`) | **CC-BY-NC 4.0** | ❌ non-commercial |
+| **XTTS-v2** (`--tts xtts`) | **Coqui CPML** | ⚠️ needs registration |
 
-**Conclusione:** i backend predefiniti (Argos + Chatterbox + Whisper) sono adatti al
-doppiaggio commerciale. Se passi a `nllb` o `xtts`, verifica i rispettivi termini.
+**Bottom line:** the default backends (Argos + Chatterbox + Whisper) are safe for
+commercial dubbing; if you switch to `nllb` or `xtts`, check their terms.
