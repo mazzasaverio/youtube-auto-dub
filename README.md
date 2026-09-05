@@ -117,61 +117,66 @@ Riduci `--target-cps` (predefinito 15) per traduzioni più concise e un ritmo pi
 aumentalo per traduzioni più fedeli. Su una clip rapida dall'inglese all'italiano ha ridotto
 i segmenti eccessivamente compressi da circa l'86% al 56%.
 
-### Lip-sync (experimental, open-source)
+### Sincronizzazione labiale (sperimentale, open source)
 
-Make the on-screen mouth match the dub using **Wav2Lip**. It runs in its *own*
-environment (its `librosa` pin conflicts with coqui-tts), driven via subprocess:
+Fai coincidere il movimento della bocca sullo schermo con il doppiaggio usando
+**Wav2Lip**. Viene eseguito nel suo *ambiente* dedicato, perché il suo vincolo su
+`librosa` è incompatibile con coqui-tts, ed è avviato tramite sottoprocesso:
 
 ```bash
-# one-time setup, in a separate folder
+# configurazione una tantum, in una cartella separata
 git clone https://github.com/Rudrabha/Wav2Lip && cd Wav2Lip
 python -m venv .venv && . .venv/bin/activate && pip install -r requirements.txt
-# download the wav2lip_gan.pth checkpoint into Wav2Lip/checkpoints/ (see their README)
+# scarica il checkpoint wav2lip_gan.pth in Wav2Lip/checkpoints/ (vedi il loro README)
 
-# then point ytdub at it and enable --lipsync
+# poi indica quel percorso a ytdub e abilita --lipsync
 export YTDUB_WAV2LIP_DIR=/path/to/Wav2Lip
 export YTDUB_WAV2LIP_CKPT=/path/to/Wav2Lip/checkpoints/wav2lip_gan.pth
 export YTDUB_WAV2LIP_PYTHON=/path/to/Wav2Lip/.venv/bin/python
 ytdub dub URL --target en --lipsync
 ```
 
-Wav2Lip is **slow on CPU** — use a GPU. Two ready Colab notebooks (free T4 GPU):
-- [`examples/colab_lipsync_only.ipynb`](examples/colab_lipsync_only.ipynb) — **recommended**:
-  dub locally, then upload the dubbed MP4 and let Colab do *only* Wav2Lip. Fewest moving
-  parts, no heavy install.
-- [`examples/colab_lipsync.ipynb`](examples/colab_lipsync.ipynb) — the full pipeline +
-  lip-sync on Colab in one go.
+Wav2Lip è **lento su CPU**, quindi usa una GPU. Sono disponibili due notebook Colab
+pronti all'uso, con GPU T4 gratuita:
+- [`examples/colab_lipsync_only.ipynb`](examples/colab_lipsync_only.ipynb), **consigliato**:
+  esegui il doppiaggio in locale, carica poi l'MP4 doppiato e lascia che Colab esegua
+  soltanto Wav2Lip. È il percorso con meno componenti e senza installazioni pesanti.
+- [`examples/colab_lipsync.ipynb`](examples/colab_lipsync.ipynb): l'intera pipeline,
+  inclusa la sincronizzazione labiale, su Colab in un solo passaggio.
 
-### Multi-voice (multiple speakers)
+### Più voci (più relatori)
 
-By default the whole video is dubbed in one cloned voice. `--diarize` detects each
-speaker and clones a *separate* voice per speaker. Two backends:
+Per impostazione predefinita, l'intero video viene doppiato con una sola voce clonata.
+`--diarize` rileva ogni relatore e clona una voce *separata* per ciascuno. Sono disponibili
+due backend:
 
 ```bash
-# Token-free (default): speaker-embedding clustering — no gated models, no HF token.
+# Senza token (predefinito): clustering degli embedding vocali, senza modelli protetti né token HF.
 uv pip install -e ".[chatterbox,diarize]"
-ytdub dub URL --diarize --speakers 2        # or --speakers 0 to auto-estimate
+ytdub dub URL --diarize --speakers 2        # oppure --speakers 0 per la stima automatica
 
-# Higher accuracy: pyannote (needs a free HF token + one-time terms acceptance).
+# Maggiore accuratezza: pyannote richiede un token HF gratuito e l'accettazione una tantum dei termini.
 uv pip install -e ".[chatterbox,diarize-pyannote]"
-export HF_TOKEN=hf_xxx                        # after accepting terms at
+export HF_TOKEN=hf_xxx                        # dopo aver accettato i termini su
                                               # hf.co/pyannote/speaker-diarization-3.1
 ytdub dub URL --diarize --diarize-method pyannote
 ```
 
-## No GPU? It still works
+## Senza GPU? Funziona comunque
 
-The pipeline auto-detects your hardware: with no GPU it simply runs on **CPU** — nothing
-to configure. Download, transcription (faster-whisper `int8`), translation (Argos),
-synchronization and muxing are all comfortable on a plain laptop.
+La pipeline rileva automaticamente l'hardware: senza GPU funziona semplicemente su
+**CPU**, senza alcuna configurazione. Download, trascrizione con faster-whisper `int8`,
+traduzione con Argos, sincronizzazione e multiplexing funzionano bene su un normale
+portatile.
 
-The one slow part on CPU is the neural **voice cloning (TTS)**. Rule of thumb: short
-clips (Shorts, a few minutes) are fine; long videos take a while. To keep CPU snappy:
+La parte lenta su CPU è la **clonazione vocale neurale (TTS)**. In generale, clip brevi,
+come gli Shorts o pochi minuti di video, non creano problemi, mentre i video lunghi
+richiedono tempo. Per mantenere rapida l'esecuzione su CPU:
 
 ```bash
-ytdub dub URL --asr-model base      # smaller Whisper (tiny/base) = faster ASR
-ytdub dub URL --tts xtts            # XTTS is faster than the Chatterbox default on CPU
-# keep --translator argos (default); nllb and --diarize add work on CPU
+ytdub dub URL --asr-model base      # Whisper più piccolo (tiny/base) = ASR più veloce
+ytdub dub URL --tts xtts            # XTTS è più veloce del Chatterbox predefinito su CPU
+# mantieni --translator argos (predefinito); nllb e --diarize aumentano il lavoro su CPU
 ```
 
 **Want a GPU without owning one — for free?** Run it on **Google Colab** or **Kaggle**
