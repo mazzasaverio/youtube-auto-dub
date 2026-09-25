@@ -60,7 +60,9 @@ Do not load every rule, skill, or reference for every task.
 - Assess reusable lessons in the same session under
   `.agent-standards/reference/03-continuous-learning.md`. Update ops when available;
   otherwise record a concise pending lesson in existing project documentation.
-  Never copy personal context into a product repository.
+  The entire ops `context/` tree is private. Never copy its files or personal
+  details into product repositories, public rules, skills, logs, or commits.
+  Promote only reviewed, non-personal lessons and operational decisions.
 - Report changes, checks, publication status, and unavailable validation honestly.
 
 ## Optional restricted source references

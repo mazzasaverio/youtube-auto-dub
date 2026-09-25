@@ -22,7 +22,7 @@ or other wrappers around an existing web application.
   “website and PWA” policy linked from the store describes a different product.
 - Prevent the store build from **selling**. Hide prices, plan selection, and every
   control starting Checkout; retain web-purchased entitlements, gift codes,
-  and management of existing subscriptions. See [`../strategy/05-payments-stripe.md`](https://github.com/mazzasaverio/ops/blob/a001ba70ab91bffa7143bf1f955107b17a1254fc/strategy/05-payments-stripe.md).
+  and management of existing subscriptions. See [`../strategy/05-payments-stripe.md`](https://github.com/mazzasaverio/ops/blob/c7523488ec26286019546983f0963082331611ff/strategy/05-payments-stripe.md).
 - Give apps where users see content published by others an **in-app reporting
   control**, usable without an account and directed to a person who reads it.
 - Provide a **reviewer account** when any section requires login: created through
@@ -51,6 +51,6 @@ or other wrappers around an existing web application.
 
 ## References
 
-- [`../platform/11-play-console.md`](https://github.com/mazzasaverio/ops/blob/a001ba70ab91bffa7143bf1f955107b17a1254fc/platform/11-play-console.md) for Play
+- [`../platform/11-play-console.md`](https://github.com/mazzasaverio/ops/blob/c7523488ec26286019546983f0963082331611ff/platform/11-play-console.md) for Play
   mechanics, API separation, and TWA builds.
 - [`04-privacy-consent.md`](04-privacy-consent.md) for policy text consistent with declarations.

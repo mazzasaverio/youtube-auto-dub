@@ -532,6 +532,8 @@ def source(ops, root):
     require("rules/README.md" in files, "config must include rules/README.md")
     for name in files:
         relative(name)
+        require("context" not in (part.casefold() for part in PurePosixPath(name).parts),
+                "personal context must never be distributed: " + name)
         require(name not in ("manifest.json", "verify.py"), "reserved bundle filename: " + name)
     profiles = config["profiles"]
     require(isinstance(profiles, dict) and "base" in profiles and "web" in profiles,

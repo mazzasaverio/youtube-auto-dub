@@ -71,5 +71,5 @@ advertising, third-party scripts, or behavior described in a privacy policy.
 ## References
 
 - Use [Microsoft Consent API v2](https://learn.microsoft.com/en-us/clarity/setup-and-installation/clarity-consent-api-v2) and disclosure documentation for current provider behavior.
-- Use [`platform/07-observability.md`](https://github.com/mazzasaverio/ops/blob/a001ba70ab91bffa7143bf1f955107b17a1254fc/platform/07-observability.md) for
+- Use [`platform/07-observability.md`](https://github.com/mazzasaverio/ops/blob/c7523488ec26286019546983f0963082331611ff/platform/07-observability.md) for
   operational telemetry and persistent business events.

@@ -55,4 +55,4 @@ All repositories. Publication authorization is defined in `../AGENTS.md`.
 ## Reference
 
 - [Efficient development cycle](../reference/02-efficient-development.md).
-- [Observability](https://github.com/mazzasaverio/ops/blob/a001ba70ab91bffa7143bf1f955107b17a1254fc/platform/07-observability.md).
+- [Observability](https://github.com/mazzasaverio/ops/blob/c7523488ec26286019546983f0963082331611ff/platform/07-observability.md).

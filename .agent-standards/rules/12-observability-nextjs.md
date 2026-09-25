@@ -3,7 +3,7 @@
 ## Applies when
 
 Connecting or verifying Next.js capture to self-hosted GlitchTip and its Telegram
-webhook. Service setup belongs to [observability](https://github.com/mazzasaverio/ops/blob/a001ba70ab91bffa7143bf1f955107b17a1254fc/platform/07-observability.md).
+webhook. Service setup belongs to [observability](https://github.com/mazzasaverio/ops/blob/c7523488ec26286019546983f0963082331611ff/platform/07-observability.md).
 
 ## Required
 
@@ -57,7 +57,7 @@ network activity. A present DSN alone does not prove event delivery.
 
 ## References
 
-- Architecture, setup, and alerts: [observability](https://github.com/mazzasaverio/ops/blob/a001ba70ab91bffa7143bf1f955107b17a1254fc/platform/07-observability.md).
-- Dated failure evidence: [capture notes](https://github.com/mazzasaverio/ops/blob/a001ba70ab91bffa7143bf1f955107b17a1254fc/platform/reference/02-exception-capture.md).
-- Build-time limits: [Coolify API](https://github.com/mazzasaverio/ops/blob/a001ba70ab91bffa7143bf1f955107b17a1254fc/platform/reference/01-coolify-api.md).
+- Architecture, setup, and alerts: [observability](https://github.com/mazzasaverio/ops/blob/c7523488ec26286019546983f0963082331611ff/platform/07-observability.md).
+- Dated failure evidence: [capture notes](https://github.com/mazzasaverio/ops/blob/c7523488ec26286019546983f0963082331611ff/platform/reference/02-exception-capture.md).
+- Build-time limits: [Coolify API](https://github.com/mazzasaverio/ops/blob/c7523488ec26286019546983f0963082331611ff/platform/reference/01-coolify-api.md).
 - Disclosure: `04-privacy-consent.md`.

@@ -14,6 +14,16 @@ entry points and keep upstream material under `upstream/`.
 - `.agents/skills/ops-*`: Codex adapter.
 - `.claude/skills/ops-*`: Claude adapter with the same reference payload.
 
+The entire ops `context/` tree is private, including nested references, not only
+`context/01-preferences.md`. Never publish it to public repositories or distribute
+it in product bundles, even private ones. The distributor rejects context paths
+even if accidentally added to its explicit allowlist. Do not bypass this by
+renaming files or copying their contents into rules, skills, logs, or commits.
+Promote only reviewed, non-personal operational decisions and reusable lessons;
+never personal circumstances, private evidence, or identifying details.
+Keep the ops repository private. Path checks do not detect paraphrased personal
+information, so content review remains required before publication.
+
 No personal context, production inventory, credentials, or recursive platform
 copy belongs in the bundle. Unbundled Markdown links become revision-pinned ops
 links; code-formatted paths remain literal. Missing restricted references block

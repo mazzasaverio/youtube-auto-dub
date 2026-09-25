@@ -1,7 +1,7 @@
 # Shared learning in the same session
 
 Owner decision of 2026-09-06, with the approved runtime distribution model of
-2026-09-25. Required through [AGENTS.md](https://github.com/mazzasaverio/ops/blob/a001ba70ab91bffa7143bf1f955107b17a1254fc/AGENTS.md) for every project and coding
+2026-09-25. Required through [AGENTS.md](https://github.com/mazzasaverio/ops/blob/c7523488ec26286019546983f0963082331611ff/AGENTS.md) for every project and coding
 agent following its instructions. This is not a background process: the agent
 performs it during the work without waiting for another owner request.
 
