@@ -58,10 +58,14 @@ Do not load every rule, skill, or reference for every task.
   do not infer an ambiguous publication destination. Publish working increments.
 - Assess reusable lessons in the same session under
   `{{STANDARDS}}/reference/03-continuous-learning.md`. Update ops when available;
-  otherwise record a concise pending lesson in existing project documentation.
-  The entire ops `context/` tree is private. Never copy its files or personal
-  details into product repositories, public rules, skills, logs, or commits.
-  Promote only reviewed, non-personal lessons and operational decisions.
+  otherwise capture a verified reusable lesson as `.agent-proposals/<id>.json`
+  following `{{STANDARDS}}/reference/09-agent-proposals.md`. Do this without an
+  owner reminder; no proposal is needed when nothing generalizable emerges.
+  Personal context belongs in a separate private repository, not ops or product
+  bundles. Never copy its files or personal details into shared rules, skills,
+  product repositories, logs, or commits. Promote only reviewed, non-personal
+  lessons and operational decisions. Ordinary UI and development work never
+  require private context access or a local checkout.
 - Report changes, checks, publication status, and unavailable validation honestly.
 
 ## Optional restricted source references

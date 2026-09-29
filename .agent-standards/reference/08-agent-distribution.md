@@ -14,11 +14,12 @@ entry points and keep upstream material under `upstream/`.
 - `.agents/skills/ops-*`: Codex adapter.
 - `.claude/skills/ops-*`: Claude adapter with the same reference payload.
 
-The entire ops `context/` tree is private, including nested references, not only
-`context/01-preferences.md`. Never publish it to public repositories or distribute
-it in product bundles, even private ones. The distributor rejects context paths
-even if accidentally added to its explicit allowlist. Do not bypass this by
-renaming files or copying their contents into rules, skills, logs, or commits.
+Personal context belongs in a separate private repository, including its nested
+references. It must not be restored to ops or distributed in product bundles,
+even private ones. The distributor rejects context paths even if accidentally
+added to its explicit allowlist. Do not bypass this by renaming files or copying
+their contents into rules, skills, logs, or commits. Private context is never a
+required bundle input or a prerequisite for ordinary UI and development work.
 Promote only reviewed, non-personal operational decisions and reusable lessons;
 never personal circumstances, private evidence, or identifying details.
 Keep the ops repository private. Path checks do not detect paraphrased personal
@@ -31,11 +32,15 @@ only operations that need them, not unrelated frontend work.
 
 ## Installation and updates
 
+For multiple projects use [central reconciliation](https://github.com/mazzasaverio/ops/blob/c3a410565499d8f8926f9850b5eb5d0c094fa545/reference/10-agent-reconciliation.md):
+explicit inventory, isolated plans, direct publication, and per-project receipts.
+The low-level installer below remains useful for a single local bootstrap.
+
 Commit reviewed source changes before distribution. From an ops checkout:
 
 ```bash
 bash scripts/rules-sync.sh --list
-bash scripts/rules-sync.sh --install ../products/example --ci
+bash scripts/rules-sync.sh --install ../products/example
 bash scripts/rules-sync.sh --check ../products/example
 ```
 
@@ -50,10 +55,23 @@ In a product clone, without ops or network:
 python3 .agent-standards/verify.py
 ```
 
-`--ci` installs an optional pinned-checkout workflow that runs this verifier.
+Dedicated per-project `Agent standards` workflows are retired. Installation
+removes only unchanged, manifest-owned copies and updates the manifest in the same
+transaction. Edited or unowned copies block the operation without deletion.
+`--ci` is rejected; subsequent syncs never recreate the workflow. Keep the central
+ops CI and existing application CI. An existing application job may optionally
+invoke the offline verifier after an explicit project-level review; the installer
+does not change application workflows or branch protection.
+
+The distributor verifies integrity before publication. Without a product CI step,
+later manual edits are detected at the next local verification or sync, not
+necessarily at commit time. Agent discovery needs the files, not GitHub Actions.
 Integrity checks detect edits and missing files, not whether a model obeyed rules
 or whether the snapshot is the latest ops release. Source freshness requires
-`--check` from ops. Unrelated ops commits do not invalidate bundles.
+`--check` from ops. Unrelated ops commits do not invalidate bundles. The selected
+source digest also avoids churn when only an unselected skill or profile changes;
+all allowlisted rules remain shared base inputs. Older v1 manifests need one
+verifier/manifest update to gain this selected-source tracking.
 
 Automatic profiles inspect root dependencies and `components.json`. `base` has
 rules only; `web` adds frontend-design, shadcn, and accessibility; `prisma` adds
@@ -113,6 +131,7 @@ change with appropriate checks. Local checksum tests cannot prove cloud discover
 Record client versions and results; do not describe this acceptance test as passed
 until those sessions actually run.
 
-When ops is unavailable, record reusable lessons in existing project documentation
-as pending promotion. Review them into the canonical source and redistribute;
-never turn generated snapshots into independently maintained rule sets.
+When ops is unavailable, capture [structured lesson proposals](09-agent-proposals.md).
+Review them into the canonical source and redistribute; never turn generated
+snapshots into independently maintained rule sets. The private central inventory,
+reconciliation state and evidence are not part of any product bundle.

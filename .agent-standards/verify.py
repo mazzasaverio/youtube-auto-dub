@@ -52,17 +52,6 @@ IMPORTS = {"CLAUDE.md": "@AGENTS.md", "CLAUDE.local.md": "@AGENTS.md",
            ".claude/CLAUDE.md": "@../AGENTS.md"}
 SHADOWS = (".rules", ".cursorrules", ".windsurfrules", ".clinerules",
            "AGENT.md", ".github/copilot-instructions.md", "STANDARDS.lock")
-CI = b"""name: Agent standards
-on: [push, pull_request]
-permissions:
-  contents: read
-jobs:
-  verify:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-      - run: python3 .agent-standards/verify.py
-"""
 
 
 class SyncError(Exception):
@@ -223,20 +212,28 @@ def managed_path(name):
 
 
 def inventory_digest(manifest):
-    return digest(encoded({key: manifest[key] for key in
-                           ("files", "block_sha256", "profiles", "skills", "source_digest")}))
+    keys = ["files", "block_sha256", "profiles", "skills", "source_digest"]
+    # Keep distributed v1 inventories valid; new inventories also bind the pin
+    # and the selection fingerprint used to decide whether that pin can survive.
+    if "selected_source_digest" in manifest:
+        keys.extend(("selected_source_digest", "source_revision"))
+    return digest(encoded({key: manifest[key] for key in keys}))
 
 
 def parse_manifest(data):
     m = load_json(data)
-    require(isinstance(m, dict) and set(m) == {"version", "files", "block_sha256", "profiles",
-            "skills", "source_revision", "source_digest", "digest"}, "invalid manifest schema")
+    required = {"version", "files", "block_sha256", "profiles", "skills",
+                "source_revision", "source_digest", "digest"}
+    require(isinstance(m, dict) and required <= m.keys()
+            and not m.keys() - required - {"selected_source_digest"}, "invalid manifest schema")
     require(type(m["version"]) is int and m["version"] == 1, "unsupported manifest version")
     require(isinstance(m["files"], dict), "invalid manifest inventory")
     for name, sha in m["files"].items():
         managed_path(name)
         require(isinstance(sha, str) and re.fullmatch(r"[0-9a-f]{64}", sha), "invalid file hash")
-    for key in ("block_sha256", "source_digest", "digest"):
+    for key in ("block_sha256", "source_digest", "digest", "selected_source_digest"):
+        if key == "selected_source_digest" and key not in m:
+            continue
         require(isinstance(m[key], str) and re.fullmatch(r"[0-9a-f]{64}", m[key]), "invalid " + key)
     require(isinstance(m["source_revision"], str)
             and re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", m["source_revision"]), "invalid source revision")
@@ -525,6 +522,18 @@ def skill_wrapper(name, bundled, revision):
 
 
 def source(ops, root):
+    """Retain the public six-value API used by fleet callers."""
+    old_data = read(root, LOCK, optional=True)
+    old = parse_manifest(old_data) if old_data is not None else None
+    return selected_source(ops, root, old)[:6]
+
+
+def selected_source(ops, root, old):
+    """Validate all source inputs, but pin/render only effective selected inputs.
+
+    All allowlisted rules and references remain base inputs. Profiles select
+    skills only; file scoping would also require changes to the runtime router.
+    """
     config = load_json(read(ops, CONFIG))
     require(isinstance(config, dict) and set(config) == {"files", "profiles", "skills_root"},
             "invalid bundle config schema")
@@ -532,7 +541,8 @@ def source(ops, root):
     require("rules/README.md" in files, "config must include rules/README.md")
     for name in files:
         relative(name)
-        require("context" not in (part.casefold() for part in PurePosixPath(name).parts),
+        require(not {"context", "personal-context"}.intersection(
+                    part.casefold() for part in PurePosixPath(name).parts),
                 "personal context must never be distributed: " + name)
         require(name not in ("manifest.json", "verify.py"), "reserved bundle filename: " + name)
     profiles = config["profiles"]
@@ -585,17 +595,43 @@ def source(ops, root):
     for profile in selected:
         skills.update(profiles[profile])
     require(skills <= available.keys(), "unknown extra skills: " + repr(skills - available.keys()))
-    provenance = validate_skills_lock(ops, available) if skills or any(profiles.values()) else None
+    provenance = (validate_skills_lock(ops, available)
+                  if directory.exists() or safe(ops, SKILLS_LOCK).exists() else None)
     bundled = set(files) | {RUNTIME}
     originals = {name: read(ops, name) for name in sorted(bundled)}
     verifier = read(ops, "scripts/agent-sync.py")
     inputs = {**originals, CONFIG: read(ops, CONFIG), "scripts/agent-sync.py": verifier}
-    scopes = set(inputs)
+    # Include optional vendor paths even when absent, so deleting a tracked tree
+    # and lock cannot conceal dirty sources in an empty-profile configuration.
+    scopes = set(inputs) | {SKILLS_LOCK, skills_root}
     if provenance is not None:
         inputs[SKILLS_LOCK] = provenance
         inputs.update(tree(ops, skills_root))
-        scopes.update((SKILLS_LOCK, skills_root))
     revision = source_revision(ops, inputs, scopes)
+    # Global audit timestamps, paths and aggregate lock hashes are validation
+    # inputs, not selected payload. Retain only relevant per-skill provenance.
+    facts = {}
+    for entry in load_json(provenance)["skills"] if provenance is not None else []:
+        if entry["name"] not in skills:
+            continue
+        facts[entry["name"]] = {}
+        for section, keys in {
+            "source": ("repo", "path", "revision", "entrySha256", "treeSha256"),
+            "license": ("spdx", "status", "file", "sha256", "upstreamPath"),
+        }.items():
+            metadata = entry.get(section, {})
+            require(isinstance(metadata, dict), "invalid selected skill " + section)
+            facts[entry["name"]][section] = {key: metadata[key] for key in keys if key in metadata}
+    selected_hash = digest(encoded({
+        "version": 1, "profiles": sorted(selected), "skills": sorted(skills),
+        "skills_root": skills_root,
+        "originals": {p: digest(v) for p, v in originals.items()},
+        "verifier": digest(verifier),
+        "skill_files": {p: digest(v) for skill in sorted(skills) for p, v in available[skill].items()},
+        "provenance": facts,
+    }))
+    if old and old.get("selected_source_digest") == selected_hash:
+        revision = old["source_revision"]
     payload = {}
     for name, data in originals.items():
         if name.lower().endswith(".md"):
@@ -611,26 +647,28 @@ def source(ops, root):
             payload[destination + "SKILL.md"] = skill_wrapper(skill, bundled, revision)
             for name, content in available[skill].items():
                 payload[destination + "upstream/" + name[len(prefix):]] = content
-    source_hash = digest(encoded({"config": config, "skills_lock": digest(provenance) if provenance else None,
-                                 "originals": {p: digest(v) for p, v in originals.items()},
+    source_hash = digest(encoded({"selected_source_digest": selected_hash,
                                  "files": {p: digest(v) for p, v in payload.items()}}))
     runtime = text(payload[BUNDLE + "/" + RUNTIME]).replace("{{STANDARDS}}", BUNDLE)
     require(BEGIN not in runtime and END not in runtime, "runtime contains managed markers")
     block = (BEGIN + "\n" + runtime.rstrip("\n") + "\n" + END).encode()
-    return payload, block, sorted(selected), ["ops-" + name for name in sorted(skills)], source_hash, revision
+    return (payload, block, sorted(selected), ["ops-" + name for name in sorted(skills)],
+            source_hash, revision, selected_hash)
 
 
 def plan(root, ops, ci=False):
+    require(ci is False, "dedicated Agent standards CI is retired; use plan(..., ci=False)")
     repository(root, ops)
-    payload, block, profiles, skills, source_hash, revision = source(ops, root)
     old_data = read(root, LOCK, optional=True)
     old = parse_manifest(old_data) if old_data is not None else None
     if old:
         validate_owned(root, old)
     else:
         require(not safe(root, BUNDLE).exists(), "unknown bundle destination: " + BUNDLE)
-    if ci or (old and WORKFLOW in old["files"]):
-        payload[WORKFLOW] = CI
+    require(not safe(root, WORKFLOW).exists() or (old is not None and WORKFLOW in old["files"]),
+            "unowned dedicated workflow conflict (preserved): " + WORKFLOW
+            + "; review and move or remove it manually before installing standards")
+    payload, block, profiles, skills, source_hash, revision, selected_hash = selected_source(ops, root, old)
     for skill in skills:
         if old and skill in old["skills"]:
             continue
@@ -642,7 +680,7 @@ def plan(root, ops, ci=False):
         path = safe(root, name)
         require(not path.exists() or (old is not None and name in old["files"]),
                 "unknown generated destination: " + name)
-    m = {"version": 1, "source_revision": revision,
+    m = {"version": 1, "source_revision": revision, "selected_source_digest": selected_hash,
          "source_digest": source_hash, "profiles": profiles, "skills": skills,
          "files": {p: digest(v) for p, v in payload.items()}, "block_sha256": digest(block)}
     m["digest"] = inventory_digest(m)
@@ -751,14 +789,15 @@ def main(argv=None):
     modes.add_argument("--check", nargs="?", const="", metavar="PATH")
     modes.add_argument("--verify", metavar="PATH")
     modes.add_argument("--list", action="store_true")
-    parser.add_argument("--ci", action="store_true", help="install the dedicated integrity workflow")
+    parser.add_argument("--ci", action="store_true", help="retired option; rejected without writes")
     if argv is None:
         argv = sys.argv[1:]
         if not argv and Path(__file__).name == "verify.py":
             argv = ["--verify", str(Path(__file__).absolute().parent.parent)]
     args = parser.parse_args(argv)
-    if args.ci and not (args.install or args.install_all):
-        parser.error("--ci requires --install, --write or --install-all")
+    if args.ci:
+        parser.error("--ci is retired; rerun without --ci. Dedicated Agent standards workflows "
+                     "are no longer created; unchanged owned workflows are removed on install")
     try:
         if args.verify is not None:
             root = root_path(args.verify)
@@ -775,7 +814,7 @@ def main(argv=None):
         plans, failed = [], False
         for root in roots:
             try:
-                operations, warnings = plan(root, ops, args.ci)
+                operations, warnings = plan(root, ops)
                 for warning in warnings:
                     print(str(root) + ": warning: " + warning, file=sys.stderr)
                 if args.check is not None:

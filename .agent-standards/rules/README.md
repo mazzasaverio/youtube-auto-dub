@@ -37,7 +37,7 @@ Load references only when needed.
 From an ops checkout, install into the actual target repository:
 
 ```bash
-bash scripts/rules-sync.sh --install ../products/example --ci
+bash scripts/rules-sync.sh --install ../products/example
 ```
 
 Commit and publish the generated bundle before starting a cloud session.

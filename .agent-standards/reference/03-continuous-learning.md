@@ -1,7 +1,7 @@
 # Shared learning in the same session
 
 Owner decision of 2026-09-06, with the approved runtime distribution model of
-2026-09-25. Required through [AGENTS.md](https://github.com/mazzasaverio/ops/blob/c7523488ec26286019546983f0963082331611ff/AGENTS.md) for every project and coding
+2026-09-25. Required through [AGENTS.md](https://github.com/mazzasaverio/ops/blob/c3a410565499d8f8926f9850b5eb5d0c094fa545/AGENTS.md) for every project and coding
 agent following its instructions. This is not a background process: the agent
 performs it during the work without waiting for another owner request.
 
@@ -48,10 +48,12 @@ Work is not complete if an established reusable lesson remains only in chat or
 an agent's personal memory. Do not make artificial changes when no new lesson
 emerges: performing the assessment is sufficient.
 
-If `ops` or the canonical source is unavailable, or a conflict prevents updating
-it, record the lesson locally in the project's LOG with the canonical destination
-and concrete blocker, pending canonical update. This satisfies local capture,
-not completed propagation; it must not block unrelated implementation.
+If `ops` or the canonical source is unavailable, or promotion requires broader
+review, commit a small structured proposal under
+[the capture contract](09-agent-proposals.md). The project LOG may link to it;
+do not duplicate its contents there. This satisfies local capture, not promotion
+or completed propagation, and must not block unrelated implementation. Central
+reconciliation reads committed proposals, never private chat transcripts.
 
 ## Propagation and boundaries
 
@@ -68,3 +70,29 @@ all applications. Apply a relevant rule after its updated bundle is synced;
 a shared rollout needs its own scope, checks, and authorization. Preserve other
 work in generated copies. The central source remains authoritative for authoring,
 while a product's actual loaded revision remains pinned until synchronization.
+
+Personal context has a separate private authoring boundary. A private repository
+is not a required input to shared standards, bundles, or ordinary development.
+Promote the reviewed operational decision, not the personal evidence behind it.
+When moving private material out of a shared tree, remove live local routes and
+add a filesystem guard that also catches ignored recreations without reading or
+printing their contents. Git ignore rules alone do not enforce this boundary.
+
+## Deterministic reconciliation
+
+Use [the central workflow](https://github.com/mazzasaverio/ops/blob/c3a410565499d8f8926f9850b5eb5d0c094fa545/reference/10-agent-reconciliation.md) from ops. Hash-bound receipts
+prevent repeated review of identical proposals; changed content reopens review.
+Only the agent can decide semantic equivalence and general applicability. History
+checkpoints advance after explicit review, not collection. Automated sync commits
+are excluded only when their changes are wholly managed, preventing a feedback
+loop without hiding mixed product changes. Never automatically delete local rules.
+
+Validate commit author and committer privacy as well as file contents. Public
+publication uses GitHub noreply identities. Remote visibility and explicit branch
+selection are checked again before push; a configured fork or default branch alone
+is not publication authorization.
+
+Prefer central tool tests plus deterministic per-target pre-publication checks
+over a dedicated CI workflow in every consumer. Agent discovery does not need
+GitHub Actions. Keep application CI independent; remove generated automation only
+when ownership and unchanged bytes are proven, updating its manifest atomically.

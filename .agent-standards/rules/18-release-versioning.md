@@ -38,5 +38,5 @@ or Console.
 
 ## References
 
-- Document contract: [project documentation](https://github.com/mazzasaverio/ops/blob/c7523488ec26286019546983f0963082331611ff/strategy/02-project-docs.md).
+- Document contract: [project documentation](https://github.com/mazzasaverio/ops/blob/c3a410565499d8f8926f9850b5eb5d0c094fa545/strategy/02-project-docs.md).
 - SemVer specification: https://semver.org/lang/it/

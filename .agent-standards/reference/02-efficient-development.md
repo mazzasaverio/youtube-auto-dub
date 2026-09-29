@@ -15,8 +15,9 @@ It does not expand authorization or reduce mandatory controls.
    the result, dependencies, or risk require it.
 4. Run required checks once on the final candidate. Repeat checks invalidated
    by changes or failures; do not rerun green checks without a reason.
-5. Update relevant documentation in one pass, then commit and push the complete
-   increment when authorized. Reuse check results that remain valid.
+5. Update relevant documentation in one pass, with one log entry for the complete
+   increment when a log is needed. Commit and push the complete increment when
+   authorized. Reuse check results that remain valid.
 6. Verify CI and deployment for the exact commit. While waiting, complete only
    useful, independent, already-authorized work, without concurrent writes to
    the publication branch or scripts deployment can interrupt. Conclude by
@@ -51,6 +52,10 @@ the Git rule change; it is not a measurement of individual stage durations.
 - Prefer CI/deployment notifications or polling at 30-60-second intervals.
   Once commit, artifact, and published behavior are verified, stop checking.
   Do not start new audits merely to fill waiting time.
+- Keep tool output focused: select the fields or lines needed to make the next
+  decision. If a command or network path fails, identify the cause once and use
+  the available fallback. Do not enumerate unrelated services or retry the same
+  blocked public request with several clients.
 
 ## Before editing
 
@@ -157,6 +162,13 @@ Capture only useful screenshot states and inspect them before concluding.
   compiled copies within assigned scope, reporting unrelated backlog without
   turning it into refactors of other apps. Follow [shared learning](03-continuous-learning.md)
   for pinned-copy synchronization and unavailable canonical sources.
+
+For a release with an additive database migration, use the known deployment
+inventory to find the target. Group the required identity, schema, count, and
+known-record checks; take one verified snapshot before the migration, then check
+the new schema and preserved data after deployment. Reuse evidence that remains
+valid within the same release. The production safeguards in the
+[Coolify rule](../rules/14-coolify-server.md) still apply.
 
 ## Coordination and publication
 
