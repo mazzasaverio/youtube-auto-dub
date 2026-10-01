@@ -32,6 +32,10 @@ An application sends or receives email.
 - For incoming email, configure Email Routing rules such as `info@<app>.com`
   and a catch-all to a verified mailbox. Use Cloudflare-required SPF and remove
   conflicting registrar or previous forwarding MX records.
+- Verify shared services' effective mail backend in web and workers. Console
+  backends do not deliver. Recover accounts through the public reset flow, never
+  log-extracted links or password overrides. For framework/SMTP troubleshooting,
+  follow the [GlitchTip runbook](https://github.com/mazzasaverio/ops/blob/f80e22ac7c1aaf4fa3ed2baf90280e3cbf99d5cb/infra/glitchtip/README.md).
 - API acceptance proves queuing, not receipt. Save the primary record first,
   record the outcome, and add retries or alerts if losing the notification
   blocks an obligation. Verify current quotas and costs by recipient type.

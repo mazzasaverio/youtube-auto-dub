@@ -85,3 +85,34 @@ Keep a small always-loaded policy, task-routed rules, and selectively discovered
 skills. Use repository-local adapters rather than machine-only paths or mandatory
 network bootstrap. Never activate vendor shell interpolation or tool permissions
 by copying upstream frontmatter into an automatically loaded entry point.
+
+## Codex: progettazione e avvio dei progetti
+
+Decisione dell'utente del 2026-10-01, valida per tutti i progetti quando si usa
+Codex. È una preferenza per l'agente di sviluppo, non una scelta dei modelli
+integrati nel prodotto.
+
+- Per avvio, design e architettura preferisci `gpt-6-astra`, se disponibile nel
+  selettore di Codex. Parti da ragionamento `high`; usa `xhigh` (Extra High)
+  per decisioni architetturali particolarmente difficili.
+- Prima dell'implementazione definisci obiettivo, utenti e perimetro dell'MVP;
+  flussi UX e direzione visiva; stack, modello dati, API e infrastruttura;
+  compromessi, rischi e piano di implementazione con criteri di accettazione.
+  Rispetta le regole condivise e i vincoli del progetto. Registra il risultato
+  nei documenti di progetto esistenti, senza creare un piano parallelo.
+- Per lo sviluppo quotidiano preferisci `gpt-6.1-sol` quando conviene contenere
+  il costo. Se si vuole un solo modello per tutte le fasi, preferisci Astra.
+- Il modello e il livello di ragionamento dipendono dalla configurazione della
+  sessione. Queste istruzioni non cambiano il selettore automaticamente:
+  segnala una configurazione diversa quando rilevante, senza dichiarare uno
+  switch non eseguito e senza bloccare lavoro già autorizzato.
+- Una scelta esplicita dell'utente per la sessione prevale. Prima di aggiornare
+  questa preferenza verifica disponibilità e capacità nella documentazione
+  ufficiale OpenAI; non sostituire i modelli soltanto perché ne esiste uno nuovo.
+
+Base documentale verificata il 2026-10-01:
+[guida ufficiale OpenAI](https://developers.openai.com/api/docs/guides/latest-model).
+Astra è presentato come il modello con maggiore capacità; Sol offre capacità
+vicine a costo inferiore. La scelta per design e architettura e i livelli di
+ragionamento sono una raccomandazione adottata dall'utente, non il risultato di
+un benchmark locale comparativo.

@@ -32,7 +32,7 @@ only operations that need them, not unrelated frontend work.
 
 ## Installation and updates
 
-For multiple projects use [central reconciliation](https://github.com/mazzasaverio/ops/blob/c3a410565499d8f8926f9850b5eb5d0c094fa545/reference/10-agent-reconciliation.md):
+For multiple projects use [central reconciliation](https://github.com/mazzasaverio/ops/blob/f80e22ac7c1aaf4fa3ed2baf90280e3cbf99d5cb/reference/10-agent-reconciliation.md):
 explicit inventory, isolated plans, direct publication, and per-project receipts.
 The low-level installer below remains useful for a single local bootstrap.
 

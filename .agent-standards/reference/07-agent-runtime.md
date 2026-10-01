@@ -20,6 +20,11 @@
 
 ## Task routing
 
+Per avvio, pianificazione, design o architettura con Codex, leggi
+`{{STANDARDS}}/reference/01-shared-agent-knowledge.md`, sezione «Codex:
+progettazione e avvio dei progetti», e applica la preferenza dell'utente per
+modello e ragionamento.
+
 Read `{{STANDARDS}}/rules/README.md` for implementation, then only relevant rules.
 Do not load every rule, skill, or reference for every task.
 

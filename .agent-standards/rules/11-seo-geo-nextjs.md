@@ -57,6 +57,11 @@ are in `01-knowledge-refresh.md`.
   entity, language, and brand or non-brand purpose.
 - Declare alternative brand spellings once in `WebSite.alternateName`. For young
   domains, these disambiguate the entity.
+- In apps with multiple root layouts, resolve social images at the segment that
+  owns the canonical `metadataBase`. Automatic image conventions above those
+  layouts can resolve before it is available. Verify rendered HTML on the built
+  server for every supported locale and confirm no localhost image URLs. Explicit
+  statically cached image handlers with absolute metadata are a valid alternative.
 - Give sharing-oriented pages distinctive Open Graph and Twitter images. Set
   `twitter.card` to `summary_large_image`: otherwise a generic parent-layout
   image may override the page preview.

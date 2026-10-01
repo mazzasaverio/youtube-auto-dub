@@ -1,7 +1,7 @@
 # Shared learning in the same session
 
 Owner decision of 2026-09-06, with the approved runtime distribution model of
-2026-09-25. Required through [AGENTS.md](https://github.com/mazzasaverio/ops/blob/c3a410565499d8f8926f9850b5eb5d0c094fa545/AGENTS.md) for every project and coding
+2026-09-25. Required through [AGENTS.md](https://github.com/mazzasaverio/ops/blob/f80e22ac7c1aaf4fa3ed2baf90280e3cbf99d5cb/AGENTS.md) for every project and coding
 agent following its instructions. This is not a background process: the agent
 performs it during the work without waiting for another owner request.
 
@@ -80,7 +80,7 @@ printing their contents. Git ignore rules alone do not enforce this boundary.
 
 ## Deterministic reconciliation
 
-Use [the central workflow](https://github.com/mazzasaverio/ops/blob/c3a410565499d8f8926f9850b5eb5d0c094fa545/reference/10-agent-reconciliation.md) from ops. Hash-bound receipts
+Use [the central workflow](https://github.com/mazzasaverio/ops/blob/f80e22ac7c1aaf4fa3ed2baf90280e3cbf99d5cb/reference/10-agent-reconciliation.md) from ops. Hash-bound receipts
 prevent repeated review of identical proposals; changed content reopens review.
 Only the agent can decide semantic equivalence and general applicability. History
 checkpoints advance after explicit review, not collection. Automated sync commits

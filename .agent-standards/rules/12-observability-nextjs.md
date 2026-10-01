@@ -3,7 +3,7 @@
 ## Applies when
 
 Connecting or verifying Next.js capture to self-hosted GlitchTip and its Telegram
-webhook. Service setup belongs to [observability](https://github.com/mazzasaverio/ops/blob/c3a410565499d8f8926f9850b5eb5d0c094fa545/platform/07-observability.md).
+webhook. Service setup belongs to [observability](https://github.com/mazzasaverio/ops/blob/f80e22ac7c1aaf4fa3ed2baf90280e3cbf99d5cb/platform/07-observability.md).
 
 ## Required
 
@@ -23,10 +23,22 @@ webhook. Service setup belongs to [observability](https://github.com/mazzasaveri
 - Limit the body before parsing, including checks during reading when
   `Content-Length` is absent or unreliable. Encode every remote field for the
   final Telegram context and accept only valid HTTPS URLs in links.
+- Verify the installed provider's notification contract before writing its parser.
+  Use the [dated contract](https://github.com/mazzasaverio/ops/blob/f80e22ac7c1aaf4fa3ed2baf90280e3cbf99d5cb/platform/reference/02-exception-capture.md),
+  fixtures and bounded escaped messages. Missing severity does not
+  establish error level. Reject unrecognized payloads instead of generic alerts.
 - Bound Telegram requests with timeouts and message counts per window; report
   how many were suppressed during an error storm.
 - Disclose browser error reporting, payload contents, and self-hosted EU storage
   in every supported language, following `04-privacy-consent.md`.
+
+## Optional private source maps
+
+When requested: archive deployed JavaScript/maps outside
+public static paths; preserve actual `sourceMappingURL` filenames. Match commit,
+runtime release and hashes, verify the loaded token's release scope, and wait for
+provider assembly. Verify public map URLs return 404. Follow the
+[GlitchTip runbook](https://github.com/mazzasaverio/ops/blob/f80e22ac7c1aaf4fa3ed2baf90280e3cbf99d5cb/infra/glitchtip/README.md#private-source-map-uploads).
 
 ## Forbidden
 
@@ -37,27 +49,30 @@ webhook. Service setup belongs to [observability](https://github.com/mazzasaveri
 - Enabling session replay in exception tracking: behavior recording belongs to
   its own consent path.
 - Uploading source maps by default: it adds CI credentials and a release step.
+- Treating a generic Telegram title as a root cause. Match event time/timezone,
+  route, runtime and stack first. An interrupted page stream does not prove an
+  import failed; check persisted outcomes. Do not suppress all matching messages
+  without evidence distinguishing expected cancellation from real failures.
 - Treating container output as request access logs. `next start` does not emit
   every request; retained logs contain only what the process writes.
 
 ## Verify
 
-Check the deployed site, not only configuration:
+On the deployed site, independently confirm browser and server exceptions reach
+the intended project. Verify authorized webhook delivery, incorrect/unconfigured
+secrets returning 404, hostile markup, body bounds and rate suppression. Verify
+an explicitly empty DSN disables capture without breaking the app.
 
-1. Confirm the DSN in served browser code, then trigger a controlled browser
-   exception and find the matching event in the intended GlitchTip project.
-2. Independently trigger a controlled server exception and find its event.
-3. Confirm an incorrect webhook secret returns 404 and an authorized alert
-   reaches Telegram. Repeat with an unconfigured secret, hostile markup, and
-   an oversized body. Inspect timeouts and suppression.
-4. Verify an empty DSN leaves the app working and capture disabled.
+Analyze individual event timestamps and releases in an explicit recent window.
+Old issues can recur. Separate historic events, current recurrences and missing
+coverage; quiet deployments alone do not prove a fix.
 
-Absence from a sample of client chunks is inconclusive: inspect loaded code and
-network activity. A present DSN alone does not prove event delivery.
+Inspect loaded code and network activity: chunk samples or a present DSN do not
+prove event delivery.
 
 ## References
 
-- Architecture, setup, and alerts: [observability](https://github.com/mazzasaverio/ops/blob/c3a410565499d8f8926f9850b5eb5d0c094fa545/platform/07-observability.md).
-- Dated failure evidence: [capture notes](https://github.com/mazzasaverio/ops/blob/c3a410565499d8f8926f9850b5eb5d0c094fa545/platform/reference/02-exception-capture.md).
-- Build-time limits: [Coolify API](https://github.com/mazzasaverio/ops/blob/c3a410565499d8f8926f9850b5eb5d0c094fa545/platform/reference/01-coolify-api.md).
+- Architecture, setup, and alerts: [observability](https://github.com/mazzasaverio/ops/blob/f80e22ac7c1aaf4fa3ed2baf90280e3cbf99d5cb/platform/07-observability.md).
+- Dated failure evidence: [capture notes](https://github.com/mazzasaverio/ops/blob/f80e22ac7c1aaf4fa3ed2baf90280e3cbf99d5cb/platform/reference/02-exception-capture.md).
+- Build-time limits: [Coolify API](https://github.com/mazzasaverio/ops/blob/f80e22ac7c1aaf4fa3ed2baf90280e3cbf99d5cb/platform/reference/01-coolify-api.md).
 - Disclosure: `04-privacy-consent.md`.

@@ -17,6 +17,10 @@ feedback forms, or an event the owner must be able to find later.
   it, catch errors, and log them without blocking registration, payment,
   feedback, or a signed webhook.
 - Degrade safely when email is not configured.
+- Reuse validated context across email and chat. Registration method comes from
+  the auth flow, not the email domain. Label first-touch attribution as such;
+  absent consent or evidence means unknown, not direct traffic or a device type.
+  Do not add tracking just to enrich an alert; keep privacy disclosures aligned.
 - Escape every user-controlled value interpolated into HTML.
 - Apply final-format escaping to chat messages using HTML or Markdown too.
   Validate URLs and attributes separately rather than treating them as safe

@@ -21,6 +21,10 @@ A project uses, changes, or evaluates an AI model.
 - Do not infer content properties from title, author, or provenance. Verify
   content, include cases contradicting metadata, and retain `sconosciuto`
   when evidence is missing.
+- For summaries of ingested documents, compare the archived input with a known
+  source detail page before attributing missing information to the source.
+  Test extraction of decisive late sections and preserve the last complete
+  input when a refresh returns only listing metadata or fails.
 - Record provider, model, reasoning setting, feature, status, latency, retry
   count, and the provider's complete token breakdown. When configured, emit
   OpenTelemetry/OpenInference spans to the central Phoenix service.
@@ -63,3 +67,10 @@ A project uses, changes, or evaluates an AI model.
 Use `../platform/08-ai-observability.md` for shared architecture and onboarding,
 `../research/03-models-openai.md` for dated OpenAI facts, and
 `05-cost-guardrails.md` for call limits.
+
+## Codex
+
+Per avvio, design, architettura e sviluppo con Codex applica la
+[preferenza condivisa](../reference/01-shared-agent-knowledge.md#codex-progettazione-e-avvio-dei-progetti).
+La scelta riguarda l’agente di sviluppo; i modelli del prodotto restano soggetti
+al contratto di valutazione sopra descritto.
